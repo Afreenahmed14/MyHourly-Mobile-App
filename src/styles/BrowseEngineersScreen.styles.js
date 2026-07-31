@@ -1,0 +1,205 @@
+import { StyleSheet } from 'react-native';
+import { colors, radius, spacing } from '../theme';
+
+export default StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  content: { padding: spacing.lg, paddingBottom: 40 },
+
+  headerCard: {
+    borderWidth: 1.5,
+    borderColor: colors.text,
+    borderRadius: radius.lg,
+    backgroundColor: colors.white,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  title: { fontSize: 20, fontWeight: '800', color: colors.text, marginBottom: spacing.sm },
+
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DCEBFC',
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  searchInput: { flex: 1, paddingVertical: 10, marginLeft: 8, fontSize: 14, color: colors.text },
+
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap' },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.full,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginRight: 8,
+    marginBottom: 8,
+    backgroundColor: colors.white,
+  },
+  filterChipActive: { borderColor: colors.primary, backgroundColor: '#EFF6FF' },
+  filterChipText: { fontSize: 12, fontWeight: '600', color: colors.text, marginRight: 4 },
+  filterChipTextActive: { color: colors.primaryDark },
+
+  resultsCount: { fontSize: 12, color: colors.textMuted, marginBottom: spacing.md },
+
+  emptyState: { alignItems: 'center', paddingVertical: spacing.xxl },
+  emptyText: { color: colors.textMuted, marginTop: spacing.sm },
+
+  paginationRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: spacing.md,
+  },
+  pageBtn: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: colors.white,
+  },
+  pageBtnDisabled: { opacity: 0.4 },
+  pageBtnText: { fontSize: 12, fontWeight: '600', color: colors.text },
+  pageLabel: { fontSize: 12, color: colors.textMuted },
+
+  // Filter/Sort bottom sheet
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' },
+  sheet: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    maxHeight: '60%',
+    paddingBottom: spacing.lg,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  sheetTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
+  done: { color: colors.primary, fontWeight: '700' },
+  optionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  optionText: { fontSize: 15, color: colors.text },
+
+  filtersBody: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.lg },
+  filterGroupLabel: { fontSize: 12, fontWeight: '700', color: colors.textMuted, marginTop: spacing.md, marginBottom: spacing.sm },
+  toggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  toggleLabel: { fontSize: 14, color: colors.text, fontWeight: '600' },
+  rateOptionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  rateOptionText: { fontSize: 14, color: colors.text },
+  clearBtn: {
+    marginTop: spacing.md,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  clearBtnText: { fontSize: 13, color: colors.danger, fontWeight: '700' },
+
+  // Full-height Filters sheet (matches the multi-field filter panel)
+  filtersSheet: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    maxHeight: '88%',
+    minHeight: '60%',
+  },
+  filtersScroll: { flexGrow: 0 },
+  closeIconBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  divider: { height: 1, backgroundColor: colors.border, marginTop: spacing.md },
+
+  rangeRow: { flexDirection: 'row' },
+  rangeInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: colors.text,
+    marginRight: spacing.sm,
+    backgroundColor: colors.white,
+  },
+
+  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap' },
+  optChip: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginRight: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  optChipActive: { borderColor: colors.primary, backgroundColor: '#EFF6FF' },
+  optChipText: { fontSize: 13, fontWeight: '600', color: colors.text },
+  optChipTextActive: { color: colors.primaryDark },
+
+  cityInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.white,
+  },
+  cityInput: { flex: 1, paddingVertical: 10, marginLeft: 8, fontSize: 14, color: colors.text },
+
+  remoteToggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingVertical: 14,
+    marginTop: spacing.md,
+  },
+  remoteToggleRowActive: { borderColor: colors.primary, backgroundColor: '#EFF6FF' },
+  remoteToggleText: { fontSize: 14, fontWeight: '700', color: colors.text, marginRight: spacing.xs },
+  remoteToggleTextActive: { color: colors.primaryDark },
+
+  filtersFooter: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    padding: spacing.lg,
+  },
+  showResultsBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  showResultsText: { color: colors.white, fontWeight: '700', fontSize: 15 },
+});

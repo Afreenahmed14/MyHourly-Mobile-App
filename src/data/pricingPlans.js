@@ -1,0 +1,107 @@
+// Mock data — replace with real plan/checkout data from your backend later.
+export const PRICING_SECTIONS = [
+  {
+    key: 'candidate',
+    title: 'Candidate',
+    subtitle: 'Apply to jobs and get discovered by companies.',
+    plans: [
+      {
+        id: 'candidate-free',
+        label: 'Free',
+        price: '\u20B90',
+        period: '',
+        features: ['Update your profile', 'Apply to 1 job per week', 'Receive 1 interview call every 2 weeks'],
+        cta: 'Get Started Free',
+      },
+      {
+        id: 'candidate-monthly',
+        label: 'Monthly',
+        price: '\u20B9499',
+        period: '/month',
+        features: ['Unlimited profile edits', 'Apply to 5\u20136 jobs every 3 days', 'Receive 5\u20136 interview calls per week'],
+        cta: 'Get Monthly',
+      },
+      {
+        id: 'candidate-yearly',
+        label: 'Yearly',
+        price: '\u20B94999',
+        period: '/year',
+        features: [
+          'Unlimited profile edits',
+          'Unlimited job applications',
+          'Receive 15\u201320 interview calls every 5 days',
+          'Priority support',
+        ],
+        cta: 'Get Yearly',
+        highlight: true,
+      },
+    ],
+  },
+  {
+    key: 'candidate-partners',
+    title: 'Candidate + Project Partners',
+    subtitle: 'Everything in Candidate, plus find partners for your own projects.',
+    plans: [
+      {
+        id: 'cp-monthly',
+        label: 'Monthly',
+        price: '\u20B9799',
+        period: '/month',
+        features: [
+          'Unlimited profile edits',
+          'Apply to 5\u20136 jobs every 3 days',
+          'Receive 5\u20136 interview calls per week',
+          'Find up to 3 project partners per week',
+        ],
+        cta: 'Get Monthly',
+      },
+      {
+        id: 'cp-yearly',
+        label: 'Yearly',
+        price: '\u20B97999',
+        period: '/year',
+        features: [
+          'Unlimited profile edits',
+          'Unlimited job applications',
+          'Receive 15\u201320 interview calls every 5 days',
+          'Unlimited project partner matching',
+          'Priority support',
+        ],
+        cta: 'Get Yearly',
+        highlight: true,
+      },
+    ],
+  },
+  {
+    key: 'company',
+    title: 'Company',
+    subtitle: 'Post jobs and hire candidates.',
+    plans: [
+      {
+        id: 'company-free',
+        label: 'Free',
+        price: '\u20B90',
+        period: '',
+        features: ['Post up to 3 jobs every 2 weeks', 'Browse engineer name, about & skills', 'Upgrade to view full profiles and hire'],
+        cta: 'Get Started Free',
+      },
+      {
+        id: 'company-monthly',
+        label: 'Monthly',
+        price: '\u20B91999',
+        period: '/month',
+        features: ['Post up to 10 jobs per week', 'Hire up to 20 candidates per week'],
+        cta: 'Get Monthly',
+      },
+      {
+        id: 'company-yearly',
+        label: 'Yearly',
+        price: '\u20B912999',
+        period: '/year',
+        features: ['Unlimited job posts', 'Unlimited hiring', 'Priority support'],
+        cta: 'Get Yearly',
+        highlight: true,
+      },
+    ],
+  },
+];
