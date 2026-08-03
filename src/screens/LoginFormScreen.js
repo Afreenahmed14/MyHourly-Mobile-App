@@ -22,7 +22,15 @@ export default function LoginFormScreen({ navigation, route }) {
     // Mock login — replace with a real auth call later.
     login(role);
     Alert.alert('Logged in', `Logged in as ${isEngineer ? 'an engineer' : 'a company'}.`, [
-      { text: 'OK', onPress: () => navigation.popToTop() },
+      {
+        text: 'OK',
+        onPress: () => {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: isEngineer ? 'Dashboard' : 'CompanyDashboard' }],
+          });
+        },
+      },
     ]);
   };
 

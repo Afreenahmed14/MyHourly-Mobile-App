@@ -28,7 +28,15 @@ export default function RegisterScreen({ navigation, route }) {
     // Mock sign-up — replace with a real API call later.
     login(role);
     Alert.alert('Account created', `Welcome to MyHourly, ${fullName || 'there'}!`, [
-      { text: 'OK', onPress: () => navigation.popToTop() },
+      {
+        text: 'OK',
+        onPress: () => {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: isEngineer ? 'Dashboard' : 'CompanyDashboard' }],
+          });
+        },
+      },
     ]);
   };
 
