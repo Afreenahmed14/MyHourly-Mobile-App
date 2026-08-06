@@ -1,17 +1,26 @@
-import { View, StyleSheet, Pressable } from 'react-native';
-import { Text, Avatar, IconButton, Button } from 'react-native-paper';
+import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import StarRating from './StarRating';
 import { useAuth } from '../context/useAuth';
 import { useSubscription } from '../context/useSubscription';
-import { colors, spacing, radius } from '../theme/theme';
+import { legacyColors as colors, legacyRadius as radius, legacySpacing as spacing } from '../theme/legacyTheme';
+
+function Stars({ rating }) {
+  const stars = [];
+  for (let i = 1; i <= 5; i++) {
+    stars.push(
+      <Ionicons key={i} name={i <= Math.round(rating) ? 'star' : 'star-outline'} size={12} color={colors.star} />
+    );
+  }
+  return <View style={{ flexDirection: 'row' }}>{stars}</View>;
+}
 
 /**
- * "Engineer card" — visual design ported from the MyHourly reference app's
- * EngineerCard component (avatar + name/headline, skill chips, rate +
- * View Profile button, star rating row), adapted to our real candidate
- * fields (no location/availability tracked in this backend, so those rows
- * are simply omitted rather than faked).
+ * Engineer card — pixel-for-pixel port of the MyHourly reference app's
+ * EngineerCard component and its CSS, wired to real candidate fields
+ * (no `location`/`available`/`postedAgo` tracked by this backend, so
+ * those rows are simply omitted rather than faked). The bookmark toggle
+ * replaces the reference app's static top-right slot when a company is
+ * browsing.
  */
 export default function CandidateCard({ candidate, onPress, onBookmarkToggle }) {
   const { role } = useAuth();
@@ -20,31 +29,38 @@ export default function CandidateCard({ candidate, onPress, onBookmarkToggle }) 
   const showLockBar = role === 'company' && !subscription;
 
   return (
-    <View style={styles.card}>
-      <Pressable onPress={onPress} style={styles.inner}>
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
+      <View style={styles.inner}>
         <View style={styles.topRow}>
-          <Avatar.Image
-            size={52}
-            source={candidate.profileImage ? { uri: candidate.profileImage } : require('../../assets/icon.png')}
-          />
+          {candidate.profileImage ? (
+            <Image source={{ uri: candidate.profileImage }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{(candidate.name || '?').charAt(0)}</Text>
+            </View>
+          )}
+
           <View style={styles.nameBlock}>
             <Text style={styles.name} numberOfLines={1}>{candidate.name}</Text>
             {!!candidate.headline && (
-              <Text style={styles.headline} numberOfLines={2}>{candidate.headline}</Text>
+              <Text style={styles.role} numberOfLines={2}>{candidate.headline}</Text>
             )}
           </View>
+
           {onBookmarkToggle && (
-            <IconButton
-              icon={candidate.isBookmarked ? 'bookmark' : 'bookmark-outline'}
-              iconColor={colors.primary}
-              onPress={onBookmarkToggle}
-            />
+            <TouchableOpacity onPress={onBookmarkToggle} style={styles.bookmarkBtn}>
+              <Ionicons
+                name={candidate.isBookmarked ? 'bookmark' : 'bookmark-outline'}
+                size={18}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
           )}
         </View>
 
         {!!skills.length && (
           <View style={styles.skillsWrap}>
-            {skills.slice(0, 4).map((skill) => (
+            {skills.slice(0, 6).map((skill) => (
               <View key={skill} style={styles.skillChip}>
                 <Text style={styles.skillChipText}>{skill}</Text>
               </View>
@@ -53,21 +69,16 @@ export default function CandidateCard({ candidate, onPress, onBookmarkToggle }) 
         )}
 
         <View style={styles.bottomRow}>
-          {!!candidate.hourlyRate ? (
-            <Text style={styles.rate}>₹{candidate.hourlyRate}/hr</Text>
-          ) : <View />}
-          <Button mode="contained-tonal" compact onPress={onPress} style={styles.viewBtn}>
-            View Profile
-          </Button>
+          <Text style={styles.rate}>{candidate.hourlyRate ? `₹${candidate.hourlyRate}/Hour` : ''}</Text>
         </View>
 
         <View style={styles.ratingRow}>
-          <StarRating rating={candidate.rating || 0} />
+          <Stars rating={candidate.rating || 0} />
           <Text style={styles.ratingText}>
             {(candidate.rating || 0).toFixed(1)} ({candidate.reviewsCount || 0} reviews)
           </Text>
         </View>
-      </Pressable>
+      </View>
 
       {showLockBar && (
         <View style={styles.lockBar}>
@@ -75,40 +86,61 @@ export default function CandidateCard({ candidate, onPress, onBookmarkToggle }) 
           <Text style={styles.lockText}>Unlock contact with a subscription</Text>
         </View>
       )}
-    </View>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    marginBottom: spacing.md,
+    backgroundColor: colors.white,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    marginBottom: spacing.md,
     overflow: 'hidden',
   },
   inner: { padding: spacing.md },
   topRow: { flexDirection: 'row', alignItems: 'flex-start' },
-  nameBlock: { flex: 1, marginLeft: spacing.sm },
-  name: { color: colors.text, fontWeight: '700', fontSize: 16 },
-  headline: { color: colors.textMuted, marginTop: 2, fontSize: 13 },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  avatarText: { color: colors.white, fontWeight: '700', fontSize: 16 },
+  avatarImage: { width: 44, height: 44, borderRadius: 22, marginRight: spacing.sm, backgroundColor: colors.border },
+  nameBlock: { flex: 1 },
+  name: { fontSize: 15, fontWeight: '700', color: colors.text },
+  role: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  bookmarkBtn: { padding: 4, marginLeft: spacing.xs },
   skillsWrap: { flexDirection: 'row', flexWrap: 'wrap', marginTop: spacing.sm },
   skillChip: {
-    backgroundColor: '#EEF2FF', borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 3,
-    marginRight: spacing.xs, marginBottom: spacing.xs,
+    backgroundColor: '#EFF6FF',
+    borderRadius: radius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginRight: 6,
+    marginBottom: 6,
   },
-  skillChipText: { color: colors.primaryDark, fontSize: 11, fontWeight: '600' },
+  skillChipText: { color: colors.primaryDark, fontSize: 10, fontWeight: '700' },
   bottomRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: spacing.xs,
   },
-  rate: { color: colors.primary, fontWeight: '700', fontSize: 15 },
-  viewBtn: { marginLeft: 'auto' },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm },
-  ratingText: { color: colors.textMuted, fontSize: 12, marginLeft: spacing.xs },
+  rate: { fontSize: 15, fontWeight: '800', color: colors.text },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', marginTop: 6 },
+  ratingText: { fontSize: 11, color: colors.textMuted, marginLeft: 4 },
   lockBar: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs,
-    backgroundColor: '#FEF3C7', paddingVertical: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingVertical: 8,
   },
-  lockText: { color: colors.primaryDark, fontSize: 12, fontWeight: '600' },
+  lockText: { fontSize: 11, color: colors.primaryDark, fontWeight: '600', marginLeft: 6 },
 });

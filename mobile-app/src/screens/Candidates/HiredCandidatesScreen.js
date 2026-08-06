@@ -1,15 +1,14 @@
 import { useCallback, useState } from 'react';
-import { View, StyleSheet, FlatList, Pressable } from 'react-native';
-import { Text, Avatar } from 'react-native-paper';
+import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { companyApi } from '../../api/companyApi';
-import EmptyState from '../../components/EmptyState';
 import LoadingView from '../../components/LoadingView';
-import { colors, spacing, radius } from '../../theme/theme';
+import { legacyColors as colors, legacyRadius as radius, legacySpacing as spacing } from '../../theme/legacyTheme';
 
 /**
- * Hired Candidates — company-only. Ports the empty-state look from the
- * MyHourly reference app's HiredCandidatesScreen, wired to the real
+ * Hired Candidates — company-only. Visual design ported from the
+ * MyHourly reference app's HiredCandidatesScreen + CompanyListScreens CSS
+ * (bordered header, card list, centered empty state), wired to the real
  * GET /companies/me/hires endpoint instead of mock data.
  */
 export default function HiredCandidatesScreen({ navigation }) {
@@ -34,40 +33,50 @@ export default function HiredCandidatesScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <FlatList
+        contentContainerStyle={styles.content}
         data={hires}
         keyExtractor={(item) => item._id || item.candidateId?._id}
-        contentContainerStyle={{ padding: spacing.lg }}
+        ListHeaderComponent={
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>Hired Candidates</Text>
+          </View>
+        }
         renderItem={({ item }) => {
           const candidate = item.candidateId || item.candidate || item;
           return (
-            <Pressable
-              style={styles.card}
+            <TouchableOpacity
+              style={styles.jobCard}
               onPress={() => navigation.navigate('CandidateDetails', { candidateId: candidate._id })}
             >
-              <Avatar.Image
-                size={48}
-                source={candidate.profileImage ? { uri: candidate.profileImage } : require('../../../assets/icon.png')}
-              />
-              <View style={{ flex: 1, marginLeft: spacing.md }}>
-                <Text style={styles.name} numberOfLines={1}>{candidate.name}</Text>
-                {!!candidate.headline && (
-                  <Text style={styles.headline} numberOfLines={1}>{candidate.headline}</Text>
+              <View style={styles.jobCardHeader}>
+                {candidate.profileImage ? (
+                  <Image source={{ uri: candidate.profileImage }} style={styles.avatarImage} />
+                ) : (
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>{(candidate.name || '?').charAt(0)}</Text>
+                  </View>
                 )}
-                {!!item.hiredAt && (
-                  <Text style={styles.hiredDate}>
-                    Hired on {new Date(item.hiredAt).toLocaleDateString()}
-                  </Text>
-                )}
+                <View style={styles.jobCardTitleWrap}>
+                  <Text style={styles.rowTitle} numberOfLines={1}>{candidate.name}</Text>
+                  {!!candidate.headline && (
+                    <Text style={styles.rowMeta} numberOfLines={1}>{candidate.headline}</Text>
+                  )}
+                  {!!item.hiredAt && (
+                    <Text style={styles.hiredDate}>Hired on {new Date(item.hiredAt).toLocaleDateString()}</Text>
+                  )}
+                </View>
               </View>
-            </Pressable>
+            </TouchableOpacity>
           );
         }}
         ListEmptyComponent={
-          <EmptyState
-            icon="account-check-outline"
-            title="No hires yet"
-            subtitle="Candidates you hire from their profile will show up here, along with when you hired them and their contact details."
-          />
+          <View style={styles.emptyWrap}>
+            <Text style={styles.emptyTitle}>No hires yet</Text>
+            <Text style={styles.emptySubtitle}>
+              Candidates you hire from their profile will show up here, along with when you hired
+              them and their contact details.
+            </Text>
+          </View>
         }
       />
     </View>
@@ -76,11 +85,36 @@ export default function HiredCandidatesScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  card: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.md,
-    padding: spacing.md, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border,
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
   },
-  name: { color: colors.text, fontWeight: '700', fontSize: 15 },
-  headline: { color: colors.textMuted, marginTop: 2, fontSize: 13 },
-  hiredDate: { color: colors.primary, marginTop: spacing.xs, fontSize: 12, fontWeight: '600' },
+  title: { fontSize: 20, fontWeight: '800', color: colors.text },
+
+  jobCard: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  jobCardHeader: { flexDirection: 'row', alignItems: 'center' },
+  avatar: {
+    width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary,
+    alignItems: 'center', justifyContent: 'center', marginRight: spacing.sm,
+  },
+  avatarText: { color: colors.white, fontWeight: '700', fontSize: 16 },
+  avatarImage: { width: 44, height: 44, borderRadius: 22, marginRight: spacing.sm, backgroundColor: colors.border },
+  jobCardTitleWrap: { flex: 1, marginRight: spacing.sm },
+  rowTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
+  rowMeta: { fontSize: 12, color: colors.textMuted, marginTop: 3 },
+  hiredDate: { fontSize: 11, color: colors.primaryDark, fontWeight: '700', marginTop: 4 },
+
+  emptyWrap: { alignItems: 'center', paddingVertical: spacing.xxl },
+  emptyTitle: { fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 4 },
+  emptySubtitle: { fontSize: 13, color: colors.textMuted, textAlign: 'center', paddingHorizontal: spacing.xl },
 });

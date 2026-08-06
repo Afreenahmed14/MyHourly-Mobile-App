@@ -1,15 +1,15 @@
 import { useCallback, useState } from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { companyApi } from '../../api/companyApi';
 import CandidateCard from '../../components/CandidateCard';
-import EmptyState from '../../components/EmptyState';
 import LoadingView from '../../components/LoadingView';
-import { colors, spacing } from '../../theme/theme';
+import { legacyColors as colors, legacySpacing as spacing } from '../../theme/legacyTheme';
 
 /**
- * Bookmarked Engineers — company-only. Ports the empty-state look from
- * the MyHourly reference app's BookmarkedScreen, but wired to the real
+ * Bookmarked Engineers — company-only. Visual design ported from the
+ * MyHourly reference app's BookmarkedScreen + CompanyListScreens CSS
+ * (bordered header, centered empty state), wired to the real
  * GET /companies/me/bookmarks endpoint instead of mock data.
  */
 export default function BookmarksScreen({ navigation }) {
@@ -39,9 +39,14 @@ export default function BookmarksScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <FlatList
+        contentContainerStyle={styles.content}
         data={bookmarks}
         keyExtractor={(item) => item._id}
-        contentContainerStyle={{ padding: spacing.lg }}
+        ListHeaderComponent={
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>Bookmarked Engineers</Text>
+          </View>
+        }
         renderItem={({ item }) => (
           <CandidateCard
             candidate={{ ...item, isBookmarked: true }}
@@ -50,11 +55,12 @@ export default function BookmarksScreen({ navigation }) {
           />
         )}
         ListEmptyComponent={
-          <EmptyState
-            icon="bookmark-outline"
-            title="No bookmarks yet"
-            subtitle="Bookmark engineers while browsing to save them here for later."
-          />
+          <View style={styles.emptyWrap}>
+            <Text style={styles.emptyTitle}>No bookmarks yet</Text>
+            <Text style={styles.emptySubtitle}>
+              Bookmark engineers while browsing to save them here for later.
+            </Text>
+          </View>
         }
       />
     </View>
@@ -63,4 +69,15 @@ export default function BookmarksScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  title: { fontSize: 20, fontWeight: '800', color: colors.text },
+  emptyWrap: { alignItems: 'center', paddingVertical: spacing.xxl },
+  emptyTitle: { fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 4 },
+  emptySubtitle: { fontSize: 13, color: colors.textMuted, textAlign: 'center', paddingHorizontal: spacing.xl },
 });

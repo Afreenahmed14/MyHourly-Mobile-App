@@ -1,7 +1,6 @@
-import { View, StyleSheet, Pressable } from 'react-native';
-import { Text, Chip } from 'react-native-paper';
+import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radius } from '../theme/theme';
+import { legacyColors as colors, legacyRadius as radius, legacySpacing as spacing } from '../theme/legacyTheme';
 
 const formatSalary = (job) => {
   if (!job.salaryMin && !job.salaryMax) return null;
@@ -24,21 +23,28 @@ const initials = (name) =>
   (name || 'J').split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
 /**
- * Job card — visual design ported from the MyHourly reference app's
- * JobCard component (logo badge, title/company, meta icon row, salary,
- * Applied badge), adapted to our real job fields.
+ * Job card — pixel-for-pixel port of the MyHourly reference app's JobCard
+ * component and its CSS (logo badge, title/company, meta icon row,
+ * salary, Applied badge, primary-skill chip), wired to real job fields.
  */
 export default function JobCard({ job, onPress }) {
   const salary = formatSalary(job);
   const posted = timeAgo(job.createdAt);
   const companyName = job.companyId?.companyName || 'Company';
+  const companyLogo = job.companyId?.logo;
+  const primarySkill = (job.skills && job.skills[0]) || job.primarySkill;
+  const locationText = job.location?.remote ? 'Remote' : job.location?.city;
 
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.topRow}>
-        <View style={styles.logoBadge}>
-          <Text style={styles.logoBadgeText}>{initials(companyName)}</Text>
-        </View>
+        {companyLogo ? (
+          <Image source={{ uri: companyLogo }} style={styles.logoImage} />
+        ) : (
+          <View style={styles.logoBadge}>
+            <Text style={styles.logoBadgeText}>{initials(companyName)}</Text>
+          </View>
+        )}
         <View style={styles.titleBlock}>
           <Text style={styles.title} numberOfLines={1}>{job.title}</Text>
           <Text style={styles.company} numberOfLines={1}>{companyName}</Text>
@@ -57,10 +63,10 @@ export default function JobCard({ job, onPress }) {
             <Text style={styles.metaText}>{job.jobType}</Text>
           </View>
         )}
-        {(job.location?.city || job.location?.remote) && (
+        {!!locationText && (
           <View style={styles.metaItem}>
             <Ionicons name="location-outline" size={12} color={colors.textMuted} />
-            <Text style={styles.metaText}>{job.location?.remote ? 'Remote' : job.location.city}</Text>
+            <Text style={styles.metaText}>{locationText}</Text>
           </View>
         )}
         {!!posted && (
@@ -72,32 +78,59 @@ export default function JobCard({ job, onPress }) {
       </View>
 
       {!!salary && <Text style={styles.salary}>{salary}</Text>}
-    </Pressable>
+
+      {!!primarySkill && (
+        <View style={styles.skillChip}>
+          <Text style={styles.skillChipText}>{primarySkill}</Text>
+        </View>
+      )}
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+    backgroundColor: colors.white,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
-  topRow: { flexDirection: 'row', alignItems: 'center' },
+  topRow: { flexDirection: 'row', alignItems: 'flex-start' },
   logoBadge: {
-    width: 44, height: 44, borderRadius: radius.sm, backgroundColor: colors.primary,
-    alignItems: 'center', justifyContent: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: radius.sm,
+    backgroundColor: '#DC2626',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
   },
-  logoBadgeText: { color: '#fff', fontWeight: '700' },
-  titleBlock: { flex: 1, marginLeft: spacing.sm },
-  title: { color: colors.text, fontWeight: '700', fontSize: 15 },
-  company: { color: colors.textMuted, marginTop: 2, fontSize: 13 },
-  appliedBadge: { backgroundColor: '#DCFCE7', borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 2 },
-  appliedBadgeText: { color: colors.success, fontSize: 11, fontWeight: '700' },
-  metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.sm },
-  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { color: colors.textMuted, fontSize: 12 },
-  salary: { color: colors.primary, fontWeight: '700', marginTop: spacing.sm },
+  logoBadgeText: { color: colors.white, fontWeight: '800', fontSize: 13 },
+  logoImage: { width: 40, height: 40, borderRadius: radius.sm, marginRight: spacing.sm, backgroundColor: colors.border },
+  titleBlock: { flex: 1 },
+  title: { fontSize: 15, fontWeight: '700', color: colors.text },
+  company: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  appliedBadge: {
+    backgroundColor: '#DCFCE7',
+    borderRadius: radius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
+  },
+  appliedBadgeText: { fontSize: 11, color: colors.success, fontWeight: '700' },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: spacing.sm },
+  metaItem: { flexDirection: 'row', alignItems: 'center', marginRight: spacing.md, marginBottom: 4 },
+  metaText: { fontSize: 11, color: colors.textMuted, marginLeft: 4 },
+  salary: { fontSize: 14, fontWeight: '800', color: colors.primaryDark, marginTop: spacing.sm },
+  skillChip: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#EFF6FF',
+    borderRadius: radius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginTop: spacing.sm,
+  },
+  skillChipText: { fontSize: 11, color: colors.primaryDark, fontWeight: '700' },
 });
