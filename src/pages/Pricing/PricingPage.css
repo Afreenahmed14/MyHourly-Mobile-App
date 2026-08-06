@@ -1,0 +1,36 @@
+.container-section-pricing-page {
+  
+  background: linear-gradient(180deg, #f8f8f9 50%, #f7f8f9e8 50%);
+  padding-left: 8%;
+  padding-right: 8%;
+}
+
+.pricing-header {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.pricing-header h1 {
+  margin-bottom: var(--space-2);
+}
+
+.pricing-grid {
+  margin-bottom: var(--space-5);
+}
+
+.pricing-footnote {
+  text-align: center;
+}
+
+.pricing-product-section {
+  margin-bottom: var(--space-8);
+}
+
+.pricing-product-header {
+  text-align: center;
+  margin-bottom: var(--space-4);
+}
+
+.pricing-product-header h2 {
+  margin-bottom: var(--space-1);
+}

@@ -1,0 +1,175 @@
+.tech-page {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(37, 99, 235, 0.06), transparent 40%),
+    radial-gradient(circle at 88% 92%, rgba(14, 165, 233, 0.06), transparent 40%);
+}
+
+.container-section-tech-header {
+  text-align: center;
+
+  margin: 0 auto;
+  padding: var(--space-8);
+}
+
+.tech-header h1 {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-3);
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.tech-header p {
+  font-size: var(--font-size-lg);
+  line-height: 1.6;
+}
+
+/* ---------- Tree ---------- */
+
+.tech-tree {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: var(--space-10);
+  padding-top: var(--space-8);
+}
+
+.tech-root {
+  background: var(--gradient-primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+  padding: var(--space-3) var(--space-8);
+  border-radius: 999px;
+  box-shadow: var(--shadow-lg);
+  letter-spacing: -0.01em;
+}
+
+.tech-trunk-line {
+  width: 3px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--color-primary), transparent);
+  border-radius: 999px;
+}
+
+/* Two horizontal cards per row: badge on the left, icons flowing to
+   the right inside each card. The last odd card (5 categories = 2
+   full rows + 1) spans both columns so it doesn't look orphaned. */
+.tech-branches {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-5);
+  width: 100%;
+  max-width: 1100px;
+}
+
+.tech-branch-wrap:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.tech-branch-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-5);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+
+.tech-branch-wrap:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.tech-branch {
+  flex-shrink: 0;
+  width: 168px;
+  border: 2px solid;
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  background: var(--color-surface);
+  white-space: nowrap;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-5);
+}
+
+.tech-branch-divider {
+  display: none;
+}
+
+.tech-leaves {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-5) var(--space-4);
+  width: 100%;
+}
+
+.tech-leaf {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  width: 76px;
+}
+
+.tech-leaf-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+
+.tech-leaf:hover .tech-leaf-icon {
+  transform: scale(1.14) translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: currentColor;
+}
+
+.tech-leaf-label {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .tech-branches {
+    grid-template-columns: 1fr;
+  }
+
+  .tech-branch-wrap:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .tech-header h1 {
+    font-size: var(--font-size-xl);
+  }
+
+  .tech-leaf {
+    width: 64px;
+  }
+
+  .tech-leaf-icon {
+    width: 46px;
+    height: 46px;
+  }
+}
