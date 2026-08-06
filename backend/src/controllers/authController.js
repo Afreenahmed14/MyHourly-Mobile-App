@@ -32,10 +32,10 @@ const registerAs = (Model, buildDoc) =>
     const { accessToken, refreshToken } = issueTokenPair(doc);
     setRefreshCookie(res, refreshToken);
 
-    // refreshToken is included in the body (in addition to the httpOnly
-    // cookie above) so mobile clients — which can't rely on cookies
-    // persisting across app restarts — can store it themselves (e.g. in
-    // Expo SecureStore) and send it back explicitly on /auth/refresh.
+    // refreshToken is also returned in the body (in addition to the
+    // httpOnly cookie used by the web client) so that native/mobile
+    // clients, which can't read httpOnly cookies, can store it themselves
+    // (e.g. Expo SecureStore) and send it back explicitly on /auth/refresh.
     return new ApiResponse(
       201,
       { user: doc.toSafeObject(), accessToken, refreshToken },
@@ -83,6 +83,7 @@ const loginAs = (Model) =>
     const { accessToken, refreshToken } = issueTokenPair(account);
     setRefreshCookie(res, refreshToken);
 
+    // See registerAs() above for why refreshToken is also in the body.
     return new ApiResponse(
       200,
       { user: account.toSafeObject(), accessToken, refreshToken },
@@ -114,9 +115,10 @@ const logout = asyncHandler(async (req, res) => {
  * to re-fetch the account from without needing a shared users table.
  */
 const refresh = asyncHandler(async (req, res) => {
-  // Web sends the refresh token as an httpOnly cookie; mobile (no reliable
-  // cookie persistence across app restarts) sends it explicitly in the body
-  // instead. Cookie takes precedence when both happen to be present.
+  // Web clients send the refresh token as an httpOnly cookie. Native/mobile
+  // clients can't use httpOnly cookies, so they send the token they stored
+  // (e.g. Expo SecureStore) in the request body instead. Cookie is checked
+  // first so existing web behavior is unchanged.
   const token = req.cookies?.refreshToken || req.body?.refreshToken;
   if (!token) throw ApiError.unauthorized(MESSAGES.AUTH.TOKEN_INVALID);
 
@@ -136,6 +138,8 @@ const refresh = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } = issueTokenPair(account);
   setRefreshCookie(res, refreshToken);
 
+  // Echo the new refresh token in the body too, so mobile clients rotate
+  // their stored copy the same way the web cookie rotates.
   return new ApiResponse(200, { accessToken, refreshToken }, 'Token refreshed').send(res);
 });
 

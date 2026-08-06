@@ -20,7 +20,8 @@ const setRefreshCookie = (res, refreshToken) => {
 const respondWithSession = (res, statusCode, account, message) => {
   const { accessToken, refreshToken } = issueTokenPair(account);
   setRefreshCookie(res, refreshToken);
-  // See authController.js for why refreshToken is also returned in the body.
+  // refreshToken is also returned in the body for native/mobile clients
+  // (see authController.js registerAs/loginAs for the same pattern).
   return new ApiResponse(
     statusCode,
     { user: account.toSafeObject(), accessToken, refreshToken },
