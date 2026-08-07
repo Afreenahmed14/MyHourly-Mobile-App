@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { View, Text, TextInput, FlatList, TouchableOpacity, Modal, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -74,6 +74,7 @@ function OptionSheet({ visible, title, options, selected, onSelect, onClose }) {
  */
 export default function BrowseFreelancersScreen({ navigation }) {
   const { role } = useAuth();
+  const listRef = useRef(null);
   const [search, setSearch] = useState('');
   const [developerType, setDeveloperType] = useState('All Types');
   const [sort, setSort] = useState(SORT_OPTIONS[0]);
@@ -142,6 +143,7 @@ export default function BrowseFreelancersScreen({ navigation }) {
     try {
       await fetchCandidates(nextPage);
       setPage(nextPage);
+      listRef.current?.scrollToOffset({ offset: 0, animated: true });
     } finally {
       setLoading(false);
     }
@@ -176,6 +178,7 @@ export default function BrowseFreelancersScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <FlatList
+        ref={listRef}
         style={styles.container}
         contentContainerStyle={styles.content}
         data={candidates}

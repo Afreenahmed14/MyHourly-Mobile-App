@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, TextInput, Button, HelperText, Avatar, IconButton } from 'react-native-paper';
+import { Text, TextInput, Button, HelperText } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import * as ImagePicker from 'expo-image-picker';
 import { companyApi } from '../../api/companyApi';
+import PhotoUploadCard from '../../components/PhotoUploadCard';
 import { colors, spacing } from '../../theme/theme';
 
 /** Editable fields mirror backend companyController.js updateMyProfile allowedFields. */
@@ -46,6 +47,19 @@ export default function EditCompanyProfileScreen({ route, navigation }) {
     }
   };
 
+  // Companies use a real logo only — no separate avatar (that's a
+  // candidate-only concept for their home page), so no picker here.
+
+  const removeLogo = async () => {
+    setUploadingLogo(true);
+    try {
+      await companyApi.updateMyProfile({ logo: null });
+      setLogo(null);
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
   const onSubmit = async (values) => {
     setError('');
     setSubmitting(true);
@@ -63,24 +77,12 @@ export default function EditCompanyProfileScreen({ route, navigation }) {
     <ScrollView style={styles.container} contentContainerStyle={{ padding: spacing.lg }}>
       <Text variant="headlineSmall" style={styles.title}>Edit company profile</Text>
 
-      <View style={styles.avatarBlock}>
-        <View>
-          <Avatar.Image
-            size={88}
-            source={logo ? { uri: logo } : require('../../../assets/icon.png')}
-          />
-          <IconButton
-            icon="camera"
-            size={18}
-            mode="contained"
-            containerColor={colors.primary}
-            iconColor="#fff"
-            style={styles.cameraBtn}
-            onPress={pickLogo}
-            disabled={uploadingLogo}
-          />
-        </View>
-      </View>
+      <PhotoUploadCard
+        imageUri={logo}
+        uploading={uploadingLogo}
+        onPick={pickLogo}
+        onRemove={removeLogo}
+      />
 
       {[
         ['companyName', 'Company name'],
@@ -114,7 +116,5 @@ export default function EditCompanyProfileScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   title: { color: colors.text, fontWeight: '700', marginBottom: spacing.lg },
-  avatarBlock: { alignItems: 'center', marginBottom: spacing.lg },
-  cameraBtn: { position: 'absolute', bottom: -6, right: -6, margin: 0 },
   field: { marginBottom: spacing.md, backgroundColor: colors.surface },
 });

@@ -17,13 +17,13 @@ export default function JobsStack() {
     <Stack.Navigator screenOptions={headerOptions}>
       {role === 'company' ? (
         <>
-          <Stack.Screen name="MyJobs" component={MyJobsScreen} options={{ title: 'My Jobs' }} />
+          <Stack.Screen name="MyJobs" component={MyJobsScreen} options={{ headerShown: false }} />
           <Stack.Screen name="PostJob" component={PostJobScreen} options={{ title: 'Post a Job' }} />
           <Stack.Screen name="JobApplicants" component={JobApplicantsScreen} options={{ title: 'Applicants' }} />
         </>
       ) : (
         <>
-          <Stack.Screen name="BrowseJobs" component={BrowseJobsScreen} options={{ title: 'Browse Jobs' }} />
+          <Stack.Screen name="BrowseJobs" component={BrowseJobsScreen} options={{ headerShown: false }} />
           <Stack.Screen name="JobDetails" component={JobDetailsScreen} options={{ title: 'Job Details' }} />
         </>
       )}

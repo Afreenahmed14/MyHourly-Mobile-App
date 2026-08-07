@@ -1,6 +1,6 @@
-import { useCallback, useState, useLayoutEffect } from 'react';
+import { useCallback, useState } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Text, Card, Button, Avatar, IconButton } from 'react-native-paper';
+import { Text, Card, Button, IconButton } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import { statsApi } from '../../api/statsApi';
 import { candidateApi } from '../../api/candidateApi';
@@ -18,6 +18,12 @@ import { getProfileCompletion } from '../../utils/profileCompletion';
  * new jobs / project partners), the current subscription's start & end
  * dates, and quick action shortcuts. (This used to be the Home tab; the
  * Home tab now holds the editable profile details instead.)
+ *
+ * The edit button lives in-page (not in a native header) because this
+ * screen has headerShown: false — it's a tab landing screen and uses
+ * the shared top navbar (AppHeader) instead of its own header, so
+ * anything wired through navigation.setOptions({ headerRight }) would
+ * never actually render.
  */
 export default function CandidateProfileScreen({ navigation }) {
   const { user, role, logout } = useAuth();
@@ -74,19 +80,6 @@ export default function CandidateProfileScreen({ navigation }) {
     }, [loadStats, loadCandidateSnapshot])
   );
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <IconButton
-          icon="pencil-outline"
-          iconColor={colors.primary}
-          disabled={!candidate}
-          onPress={() => navigation.navigate('HomeTab', { screen: 'EditCandidateProfile', params: { candidate } })}
-        />
-      ),
-    });
-  }, [navigation, candidate]);
-
   const onRefresh = async () => {
     setRefreshing(true);
     await Promise.all([loadStats(), loadCandidateSnapshot()]);
@@ -105,11 +98,23 @@ export default function CandidateProfileScreen({ navigation }) {
           <Text variant="headlineSmall" style={styles.name}>{candidate?.name || user?.name}</Text>
         </View>
 
-        <ProfileCompletionRing
-          uri={candidate?.profileImage || user?.profileImage}
-          percent={getProfileCompletion(candidate)}
-          fallbackSource={require('../../../assets/icon.png')}
-        />
+        <View style={styles.ringWrap}>
+          <ProfileCompletionRing
+            uri={candidate?.profileImage || user?.profileImage}
+            percent={getProfileCompletion(candidate)}
+            fallbackSource={require('../../../assets/icon.png')}
+          />
+          <IconButton
+            icon="pencil-outline"
+            size={16}
+            mode="contained"
+            containerColor={colors.primary}
+            iconColor="#fff"
+            style={styles.editBtn}
+            disabled={!candidate}
+            onPress={() => navigation.navigate('HomeTab', { screen: 'EditCandidateProfile', params: { candidate } })}
+          />
+        </View>
       </View>
 
       <ScrollView
@@ -204,6 +209,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
   greeting: { color: colors.textMuted },
   name: { color: colors.text, fontWeight: '700' },
+  ringWrap: { position: 'relative' },
+  editBtn: { position: 'absolute', bottom: -4, right: -4, margin: 0 },
   planCard: { marginBottom: spacing.lg, backgroundColor: colors.primary, borderRadius: radius.md },
   planLabel: { color: '#E0E7FF' },
   planName: { color: '#fff', fontWeight: '700' },

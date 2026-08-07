@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, TextInput, Button, HelperText, Chip, Avatar, IconButton } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { Text, TextInput, Button, HelperText, Chip } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { candidateApi } from '../../api/candidateApi';
 import { taxonomyApi } from '../../api/taxonomyApi';
+import PhotoUploadCard from '../../components/PhotoUploadCard';
+import AvatarSection from '../../components/AvatarSection';
 import { colors, spacing } from '../../theme/theme';
 
 /** Editable fields mirror backend candidateController.js updateMyProfile allowedFields. */
@@ -19,6 +21,8 @@ export default function EditCandidateProfileScreen({ route, navigation }) {
   const [uploadingResume, setUploadingResume] = useState(false);
   const [profileImage, setProfileImage] = useState(candidate.profileImage || null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [avatarImage, setAvatarImage] = useState(candidate.avatarImage || null);
+  const [avatarChoices, setAvatarChoices] = useState(candidate.avatarChoices || null);
 
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -73,6 +77,48 @@ export default function EditCandidateProfileScreen({ route, navigation }) {
     }
   };
 
+  // Illustrated Bitmoji-style avatar built in the AvatarBuilder screen.
+  // The builder can't hand us a callback (functions aren't valid nav
+  // params — see the "non-serializable values" warning), so instead it
+  // navigates back here with a plain `avatarResult` param, and this
+  // effect picks it up, saves it, then clears the param so it doesn't
+  // re-fire on the next re-render or back-navigation.
+  useEffect(() => {
+    const result = route.params?.avatarResult;
+    if (!result) return;
+    (async () => {
+      try {
+        await candidateApi.updateMyProfile({ avatarImage: result.url, avatarChoices: result.choices });
+        setAvatarImage(result.url);
+        setAvatarChoices(result.choices);
+      } catch (err) {
+        Alert.alert('Could not save avatar', err?.response?.data?.message || err?.message || 'Please try again.');
+      } finally {
+        navigation.setParams({ avatarResult: undefined });
+      }
+    })();
+  }, [route.params?.avatarResult]);
+
+  const removeAvatar = async () => {
+    try {
+      await candidateApi.updateMyProfile({ avatarImage: null, avatarChoices: null });
+      setAvatarImage(null);
+      setAvatarChoices(null);
+    } catch (err) {
+      Alert.alert('Could not remove avatar', err?.response?.data?.message || err?.message || 'Please try again.');
+    }
+  };
+
+  const removeImage = async () => {
+    setUploadingImage(true);
+    try {
+      await candidateApi.updateMyProfile({ profileImage: null });
+      setProfileImage(null);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const pickResume = async () => {
     const result = await DocumentPicker.getDocumentAsync({
       type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
@@ -118,24 +164,18 @@ export default function EditCandidateProfileScreen({ route, navigation }) {
     <ScrollView style={styles.container} contentContainerStyle={{ padding: spacing.lg }}>
       <Text variant="headlineSmall" style={styles.title}>Edit profile</Text>
 
-      <View style={styles.avatarBlock}>
-        <View>
-          <Avatar.Image
-            size={88}
-            source={profileImage ? { uri: profileImage } : require('../../../assets/icon.png')}
-          />
-          <IconButton
-            icon="camera"
-            size={18}
-            mode="contained"
-            containerColor={colors.primary}
-            iconColor="#fff"
-            style={styles.cameraBtn}
-            onPress={pickImage}
-            disabled={uploadingImage}
-          />
-        </View>
-      </View>
+      <PhotoUploadCard
+        imageUri={profileImage}
+        uploading={uploadingImage}
+        onPick={pickImage}
+        onRemove={removeImage}
+      />
+
+      <AvatarSection
+        avatarUri={avatarImage}
+        onBuild={() => navigation.navigate('AvatarBuilder', { initialChoices: avatarChoices, returnScreen: 'EditCandidateProfile' })}
+        onRemove={removeAvatar}
+      />
 
       <View style={styles.resumeBlock}>
         <Text variant="labelLarge" style={styles.label}>Resume</Text>
@@ -222,8 +262,6 @@ export default function EditCandidateProfileScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   title: { color: colors.text, fontWeight: '700', marginBottom: spacing.lg },
-  avatarBlock: { alignItems: 'center', marginBottom: spacing.lg },
-  cameraBtn: { position: 'absolute', bottom: -6, right: -6, margin: 0 },
   resumeBlock: { backgroundColor: colors.surface, borderRadius: 12, padding: spacing.md, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.border },
   resumeStatus: { color: colors.textMuted, marginBottom: spacing.sm },
   resumeBtn: { alignSelf: 'flex-start' },

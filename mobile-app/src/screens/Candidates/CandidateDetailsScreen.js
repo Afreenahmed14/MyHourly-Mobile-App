@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Chip, Button, Avatar, Divider, Dialog, Portal, TextInput } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Modal, Pressable, Image } from 'react-native';
+import { Text, Chip, Button, Avatar, Divider, Dialog, Portal, TextInput, IconButton } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import { candidateApi } from '../../api/candidateApi';
 import { reviewApi } from '../../api/reviewApi';
@@ -25,6 +25,7 @@ export default function CandidateDetailsScreen({ route }) {
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
   const [actionError, setActionError] = useState('');
+  const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -76,10 +77,12 @@ export default function CandidateDetailsScreen({ route }) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: spacing.lg }}>
       <View style={styles.headerRow}>
-        <Avatar.Image
-          size={72}
-          source={candidate.profileImage ? { uri: candidate.profileImage } : require('../../../assets/icon.png')}
-        />
+        <Pressable onPress={() => candidate.profileImage && setPhotoViewerOpen(true)}>
+          <Avatar.Image
+            size={72}
+            source={candidate.profileImage ? { uri: candidate.profileImage } : require('../../../assets/icon.png')}
+          />
+        </Pressable>
         <View style={{ marginLeft: spacing.md, flex: 1 }}>
           <Text variant="headlineSmall" style={styles.name}>{candidate.name}</Text>
           {!!candidate.headline && <Text variant="bodyMedium" style={styles.headline}>{candidate.headline}</Text>}
@@ -198,6 +201,26 @@ export default function CandidateDetailsScreen({ route }) {
           </Dialog.Actions>
         </Dialog>
       </Portal>
+
+      {/* Fullscreen photo viewer — tap avatar to open, tap anywhere to close */}
+      <Modal visible={photoViewerOpen} transparent animationType="fade" onRequestClose={() => setPhotoViewerOpen(false)}>
+        <Pressable style={styles.photoViewerBackdrop} onPress={() => setPhotoViewerOpen(false)}>
+          <IconButton
+            icon="close"
+            iconColor="#fff"
+            size={28}
+            style={styles.photoViewerCloseBtn}
+            onPress={() => setPhotoViewerOpen(false)}
+          />
+          {!!candidate.profileImage && (
+            <Image
+              source={{ uri: candidate.profileImage }}
+              style={styles.photoViewerImage}
+              resizeMode="contain"
+            />
+          )}
+        </Pressable>
+      </Modal>
     </ScrollView>
   );
 }
@@ -225,4 +248,7 @@ const styles = StyleSheet.create({
   reviewerName: { color: colors.text, fontWeight: '600' },
   reviewBody: { color: colors.textMuted, marginTop: spacing.xs },
   ratingChip: { marginBottom: spacing.xs },
+  photoViewerBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', alignItems: 'center', justifyContent: 'center' },
+  photoViewerCloseBtn: { position: 'absolute', top: 48, right: 8, zIndex: 1 },
+  photoViewerImage: { width: '100%', height: '80%' },
 });
