@@ -3,24 +3,43 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 
+// Expo Go (SDK 53+) removed remote push notification support on Android
+// entirely — calling the Notifications APIs there throws instead of
+// just warning. Detect that case up front so we can skip registration
+// cleanly instead of crashing the dev workflow. Development/production
+// builds (appOwnership !== 'expo') are unaffected.
+const isExpoGo = Constants.appOwnership === 'expo';
+const pushUnsupportedHere = isExpoGo && Platform.OS === 'android';
+
 // Controls how a notification is presented while the app is open in the
 // foreground — without this, foreground pushes are silently swallowed.
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+if (!pushUnsupportedHere) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 /**
  * Requests OS notification permission (if not already granted) and
  * returns this device's Expo push token, or null if permission was
- * denied or this is a simulator/emulator (push tokens require a real
- * device).
+ * denied, this is a simulator/emulator (push tokens require a real
+ * device), or we're in an environment that can't support push at all
+ * (Expo Go on Android, SDK 53+).
  */
 export async function registerForPushNotificationsAsync() {
+  if (pushUnsupportedHere) {
+    console.log(
+      'Push notifications are not supported in Expo Go on Android (SDK 53+). ' +
+        'Use a development build to test push — the rest of the app works fine here.'
+    );
+    return null;
+  }
+
   if (!Device.isDevice) {
     console.log('Push notifications require a physical device (not a simulator/emulator).');
     return null;

@@ -149,7 +149,7 @@ function CandidateHome({ navigation }) {
         {/* Bold headline banner + CTA. The candidate's optional
             Bitmoji-style avatar sits here when they've built one — the
             real profile photo still only shows up in the top navbar. */}
-        <Animated.View entering={FadeInUp.duration(450).springify().damping(18)}>
+        <Animated.View entering={FadeInUp.duration(450)}>
         <View style={styles.greetingRow}>
           <View style={{ flex: 1 }}>
             <View style={styles.headlineRow}>
@@ -176,7 +176,7 @@ function CandidateHome({ navigation }) {
       </View>
 
       {/* Invite a friend — real native share, no fabricated payout */}
-      <Animated.View entering={FadeInUp.delay(80).duration(450).springify().damping(18)}>
+      <Animated.View entering={FadeInUp.delay(80).duration(450)}>
       <AnimatedPressable style={styles.inviteBar} onPress={inviteFriend} scaleTo={0.98}>
         <View style={styles.inviteLeft}>
           <Ionicons name="gift-outline" size={20} color={colors.text} />
@@ -191,7 +191,7 @@ function CandidateHome({ navigation }) {
 
       {/* New jobs — promo-style carousel with a page counter */}
       {!!jobs.length && (
-        <Animated.View entering={FadeInUp.delay(140).duration(450).springify().damping(18)} style={styles.carouselSection}>
+        <Animated.View entering={FadeInUp.delay(140).duration(450)} style={styles.carouselSection}>
           <ScrollView
             horizontal
             pagingEnabled={false}
@@ -202,7 +202,7 @@ function CandidateHome({ navigation }) {
             onMomentumScrollEnd={onCarouselScroll}
           >
             {jobs.map((job, i) => (
-              <Animated.View key={job._id} entering={FadeInRight.delay(i * 90).duration(400).springify().damping(16)}>
+              <Animated.View key={job._id} entering={FadeInRight.delay(i * 90).duration(400)}>
               <AnimatedPressable onPress={() => openJob(job._id)} scaleTo={0.96}>
                 <LinearGradient
                   colors={JOB_CARD_GRADIENTS[i % JOB_CARD_GRADIENTS.length]}
@@ -243,7 +243,7 @@ function CandidateHome({ navigation }) {
       )}
 
       <View style={styles.body}>
-        <Animated.View entering={FadeInUp.delay(180).duration(450).springify().damping(18)}>
+        <Animated.View entering={FadeInUp.delay(180).duration(450)}>
         <View style={styles.row}>
           <Button
             mode="outlined"
@@ -261,7 +261,7 @@ function CandidateHome({ navigation }) {
         </Animated.View>
 
         {/* Profile-completion milestone tracker — real % from candidate data */}
-        <Animated.View entering={FadeInUp.delay(240).duration(450).springify().damping(18)} style={styles.incentiveCard}>
+        <Animated.View entering={FadeInUp.delay(240).duration(450)} style={styles.incentiveCard}>
           <View style={styles.incentiveHeaderRow}>
             <View>
               <Text style={styles.incentiveTitle}>Complete your profile</Text>
@@ -286,7 +286,7 @@ function CandidateHome({ navigation }) {
             {milestones.map((m, mi) => {
               const reached = completion >= m;
               return (
-                <Animated.View key={m} entering={FadeInUp.delay(280 + mi * 60).springify().damping(14)} style={styles.milestoneItem}>
+                <Animated.View key={m} entering={FadeInUp.delay(280 + mi * 60)} style={styles.milestoneItem}>
                   <View style={[styles.milestoneDot, reached && styles.milestoneDotReached]}>
                     <Ionicons
                       name={reached ? 'checkmark' : 'lock-closed'}
@@ -390,7 +390,7 @@ function CompanyHome({ navigation }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.companyScrollContent}>
-      <Animated.View entering={FadeInUp.duration(450).springify().damping(18)}>
+      <Animated.View entering={FadeInUp.duration(450)}>
       <LinearGradient colors={[colors.primaryDark, colors.primary]} style={styles.companyHero}>
         <View style={styles.companyHeroTop}>
           <View style={{ flex: 1 }}>
@@ -433,7 +433,7 @@ function CompanyHome({ navigation }) {
         <Text style={styles.companySectionTitle}>Quick actions</Text>
         <View style={styles.companyActionGrid}>
           {COMPANY_ACTIONS.map((action, ai) => (
-            <Animated.View key={action.key} entering={FadeInUp.delay(100 + ai * 60).springify().damping(16)} style={{ width: '47%' }}>
+            <Animated.View key={action.key} entering={FadeInUp.delay(100 + ai * 60)} style={{ width: '47%' }}>
             <AnimatedPressable style={styles.companyActionTile} onPress={() => go(action.nav)} scaleTo={0.95}>
               <View style={styles.companyActionIconWrap}>
                 <MaterialCommunityIcons name={action.icon} size={22} color={colors.primary} />
@@ -457,7 +457,7 @@ function CompanyHome({ navigation }) {
           recentJobs.map((job, ji) => {
             const meta = JOB_STATUS_META[job.status] || JOB_STATUS_META.open;
             return (
-              <Animated.View key={job._id} entering={FadeInUp.delay(220 + ji * 70).springify().damping(16)}>
+              <Animated.View key={job._id} entering={FadeInUp.delay(220 + ji * 70)}>
               <AnimatedPressable
                 style={styles.companyJobRow}
                 onPress={() => go(['JobsTab', 'MyJobs'])}

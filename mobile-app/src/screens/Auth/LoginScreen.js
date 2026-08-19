@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Pressable, Image } from 'react-native';
+import { useCallback, useState } from 'react';
+import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Pressable, Image, BackHandler } from 'react-native';
 import { Text, TextInput, Button, HelperText } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import Animated, { FadeInDown, FadeInUp, FadeIn, Easing } from 'react-native-reanimated';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -79,6 +80,25 @@ export default function LoginScreen({ navigation }) {
     setStep('credentials');
   };
 
+  // Hardware back button: on the credentials step it should return to
+  // the role-picker (not fall through to the OS and close the app,
+  // which is what happened before since nothing here was listening).
+  // On the role step there's nowhere "back" to go within this screen,
+  // so we let the default behavior run (exit confirmation / close).
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (step === 'credentials') {
+          setStep('role');
+          return true;
+        }
+        return false;
+      };
+      const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => sub.remove();
+    }, [step])
+  );
+
   const onSubmit = async (values) => {
     setServerError('');
     setSubmitting(true);
@@ -123,13 +143,12 @@ export default function LoginScreen({ navigation }) {
           end={{ x: 1, y: 1 }}
           style={[styles.hero, { paddingTop: insets.top + spacing.lg }]}
         >
-          <Animated.View
-            style={styles.heroLogoBadge}
-            entering={FadeInDown.duration(420).easing(Easing.out(Easing.cubic))}
-          >
-            <Image source={require('../../../assets/logo.png')} style={styles.heroLogo} resizeMode="contain" />
+          <Animated.View entering={FadeIn.duration(420)} style={styles.heroLogoStage}>
+            <View style={styles.heroLogoBadge}>
+              <Image source={require('../../../assets/logo.png')} style={styles.heroLogo} resizeMode="contain" />
+            </View>
           </Animated.View>
-          <Animated.View entering={FadeInDown.delay(80).duration(420).easing(Easing.out(Easing.cubic))}>
+          <Animated.View entering={FadeInDown.delay(160).duration(420).easing(Easing.out(Easing.cubic))}>
             <Text variant="headlineMedium" style={styles.heroTitle}>Welcome back</Text>
             <Text variant="bodyMedium" style={styles.heroSubtitle}>
               Let&apos;s get you signed in the right way
@@ -142,10 +161,10 @@ export default function LoginScreen({ navigation }) {
             <Text variant="labelLarge" style={styles.sheetLabel}>CONTINUE AS</Text>
           </Animated.View>
 
-          <RoleOption option={ROLE_OPTIONS[0]} delay={200} onPress={() => selectRole('candidate')} />
+          <RoleOption option={ROLE_OPTIONS[0]} delay={180} onPress={() => selectRole('candidate')} />
           <RoleOption option={ROLE_OPTIONS[1]} delay={280} onPress={() => selectRole('company')} />
 
-          <Animated.View entering={FadeIn.delay(380).duration(350)} style={styles.footer}>
+          <Animated.View entering={FadeIn.delay(500).duration(350)} style={styles.footer}>
             <Text variant="bodyMedium">Don&apos;t have an account? </Text>
             <Button mode="text" compact onPress={() => navigation.navigate('Register')}>
               Register
@@ -275,6 +294,11 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: radius.lg * 1.4,
     borderBottomRightRadius: radius.lg * 1.4,
   },
+  heroLogoStage: {
+    width: 64,
+    height: 64,
+    marginBottom: spacing.md,
+  },
   heroLogoBadge: {
     width: 64,
     height: 64,
@@ -282,7 +306,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
     ...shadows.raised,
   },
   heroLogo: { width: 44, height: 44 },
@@ -292,14 +315,19 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: spacing.lg,
     marginTop: -spacing.xl,
+    alignItems: 'center',
   },
   sheetLabel: {
     color: colors.textMuted,
     letterSpacing: 1,
     marginBottom: spacing.md,
     marginTop: spacing.sm,
+    textAlign: 'center',
   },
   roleCard: {
+    width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,

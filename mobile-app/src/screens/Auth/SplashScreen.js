@@ -13,14 +13,14 @@ import Animated, {
 import { colors, spacing } from '../../theme/theme';
 
 /**
- * App boot screen. Logo scales/fades in, the wordmark follows a beat
- * later, and three loading dots pulse in a wave underneath — replaces
- * the bare ActivityIndicator with a small branded moment since this is
- * the very first thing every user sees.
+ * App boot screen. The logo fades and scales gently into place, the
+ * wordmark follows a beat later, and three loading dots pulse in a
+ * wave underneath — a simple, clean branded moment since this is the
+ * very first thing every user sees.
  */
 export default function SplashScreen() {
-  const logoScale = useSharedValue(0.8);
   const logoOpacity = useSharedValue(0);
+  const logoScale = useSharedValue(0.9);
   const textOpacity = useSharedValue(0);
   const textY = useSharedValue(10);
   const dot1 = useSharedValue(0.3);
@@ -28,10 +28,11 @@ export default function SplashScreen() {
   const dot3 = useSharedValue(0.3);
 
   useEffect(() => {
-    logoOpacity.value = withTiming(1, { duration: 500, easing: Easing.out(Easing.exp) });
-    logoScale.value = withTiming(1, { duration: 500, easing: Easing.out(Easing.exp) });
-    textOpacity.value = withDelay(250, withTiming(1, { duration: 400 }));
-    textY.value = withDelay(250, withTiming(0, { duration: 400, easing: Easing.out(Easing.ease) }));
+    logoOpacity.value = withTiming(1, { duration: 420, easing: Easing.out(Easing.ease) });
+    logoScale.value = withTiming(1, { duration: 420, easing: Easing.out(Easing.back(1.2)) });
+
+    textOpacity.value = withDelay(280, withTiming(1, { duration: 400 }));
+    textY.value = withDelay(280, withTiming(0, { duration: 400, easing: Easing.out(Easing.ease) }));
 
     const wave = (sv, delay) => {
       sv.value = withDelay(
@@ -46,9 +47,9 @@ export default function SplashScreen() {
         ),
       );
     };
-    wave(dot1, 600);
-    wave(dot2, 750);
-    wave(dot3, 900);
+    wave(dot1, 500);
+    wave(dot2, 650);
+    wave(dot3, 800);
   }, []);
 
   const logoStyle = useAnimatedStyle(() => ({
@@ -65,9 +66,8 @@ export default function SplashScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Logo sits in its own absolutely-centered layer so it lands
-          exactly in the middle of the screen, independent of the
-          tagline/dots stacked below it. */}
+      {/* Logo sits in its own absolutely-centered layer, independent
+          of the tagline/dots stacked below it. */}
       <View style={styles.logoLayer}>
         <Animated.View style={logoStyle}>
           <Image source={require('../../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
