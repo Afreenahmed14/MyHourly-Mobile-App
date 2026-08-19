@@ -4,7 +4,7 @@ const ApiResponse = require('../utils/ApiResponse');
 const Review = require('../models/Review');
 const Candidate = require('../models/Candidate');
 const Company = require('../models/Company');
-const Notification = require('../models/Notification');
+const { notify } = require('../utils/notify');
 
 /** Recalculates and persists a candidate's aggregate rating from reviews written ABOUT them (by companies). */
 const recalculateCandidateRating = async (candidateId) => {
@@ -75,7 +75,7 @@ const createReview = asyncHandler(async (req, res) => {
 
   if (reviewerType === 'company') {
     await recalculateCandidateRating(candidateId);
-    await Notification.create({
+    await notify({
       userId: candidateId,
       userModel: 'Candidate',
       title: 'New review received',
@@ -84,7 +84,7 @@ const createReview = asyncHandler(async (req, res) => {
     });
   } else {
     await recalculateCompanyRating(companyId);
-    await Notification.create({
+    await notify({
       userId: companyId,
       userModel: 'Company',
       title: 'New review received',

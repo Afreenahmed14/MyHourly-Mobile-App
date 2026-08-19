@@ -12,7 +12,7 @@ export default function CandidatesStack() {
   return (
     <Stack.Navigator screenOptions={headerOptions}>
       <Stack.Screen name="BrowseFreelancers" component={BrowseFreelancersScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="CandidateDetails" component={CandidateDetailsScreen} options={{ title: 'Profile' }} />
+      <Stack.Screen name="CandidateDetails" component={CandidateDetailsScreen} options={{ headerShown:false, headerBackVisible:false }} />
       <Stack.Screen name="Bookmarks" component={BookmarksScreen} options={{ title: 'Bookmarked Engineers' }} />
       <Stack.Screen name="HiredCandidates" component={HiredCandidatesScreen} options={{ title: 'Hired Candidates' }} />
     </Stack.Navigator>

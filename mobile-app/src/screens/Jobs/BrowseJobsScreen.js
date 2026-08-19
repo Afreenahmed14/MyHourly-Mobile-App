@@ -1,17 +1,21 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { View, Text, TextInput, FlatList, TouchableOpacity, Modal, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { jobApi } from '../../api/jobApi';
+import { taxonomyApi } from '../../api/taxonomyApi';
 import JobCard from '../../components/JobCard';
 import EmptyState from '../../components/EmptyState';
 import LoadingView from '../../components/LoadingView';
 import { legacyColors as colors, legacyRadius as radius, legacySpacing as spacing } from '../../theme/legacyTheme';
 
+// Matches Job.jobType enum exactly (backend/src/models/Job.js).
 const JOB_TYPES = ['All types', 'full-time', 'part-time', 'contract', 'internship'];
-const DEV_TYPES = [
-  'All developer types', 'Backend Developer', 'Data Analyst', 'DevOps Engineer', 'Frontend Developer',
-  'Full Stack Developer', 'Mobile App Developer', 'Python developer', 'UI/UX Developer',
+// Fallback shown only until the real admin-managed list loads from
+// GET /taxonomy/developer-types.
+const FALLBACK_DEV_TYPES = [
+  'Frontend Developer', 'Backend Developer', 'Full Stack Developer',
+  'DevOps Engineer', 'Java Developer', 'Mobile Developer',
 ];
 
 function OptionSheet({ visible, title, options, selected, onSelect, onClose }) {
@@ -59,6 +63,16 @@ export default function BrowseJobsScreen({ navigation }) {
   const [typeSheetVisible, setTypeSheetVisible] = useState(false);
   const [devSheetVisible, setDevSheetVisible] = useState(false);
   const [searchVisible, setSearchVisible] = useState(false);
+  const [devTypes, setDevTypes] = useState(FALLBACK_DEV_TYPES);
+
+  useEffect(() => {
+    taxonomyApi.getDeveloperTypes()
+      .then((res) => {
+        const list = res.data.data?.developerTypes || [];
+        if (list.length) setDevTypes(list.map((t) => t.name));
+      })
+      .catch(() => {}); // keep fallback list on failure
+  }, []);
 
   const [jobs, setJobs] = useState([]);
   const [page, setPage] = useState(1);
@@ -177,14 +191,14 @@ export default function BrowseJobsScreen({ navigation }) {
             {!loading && <Text style={styles.resultsCount}>{total} jobs found</Text>}
           </>
         }
-        renderItem={({ item }) => (
-          <JobCard job={item} onPress={() => navigation.navigate('JobDetails', { jobId: item._id })} />
+        renderItem={({ item, index }) => (
+          <JobCard job={item} index={index} onPress={() => navigation.navigate('JobDetails', { jobId: item._id })} />
         )}
         onEndReachedThreshold={0.4}
         onEndReached={loadMore}
         ListEmptyComponent={
           loading ? (
-            <LoadingView />
+            <LoadingView animated={false} />
           ) : (
             <View style={styles.emptyState}>
               <Ionicons name="search" size={28} color={colors.textMuted} />
@@ -206,7 +220,7 @@ export default function BrowseJobsScreen({ navigation }) {
       <OptionSheet
         visible={devSheetVisible}
         title="Developer Type"
-        options={DEV_TYPES}
+        options={['All developer types', ...devTypes]}
         selected={devType}
         onSelect={setDevType}
         onClose={() => setDevSheetVisible(false)}

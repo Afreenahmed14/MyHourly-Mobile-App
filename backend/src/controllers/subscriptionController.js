@@ -3,7 +3,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const { createOrder, verifySignature } = require('../services/razorpayService');
-const Notification = require('../models/Notification');
+const { notify } = require('../utils/notify');
 const {
   PRODUCTS, TIERS, QUOTA_KEYS, CATALOG, getPlan, isPaidTier,
 } = require('../constants/plans');
@@ -223,7 +223,7 @@ const cancelSubscription = asyncHandler(async (req, res) => {
   req.user.emailVerified = false;
   await req.user.save();
 
-  await Notification.create({
+  await notify({
     userId: req.user._id,
     userModel: req.user.role === 'candidate' ? 'Candidate' : 'Company',
     title: 'Subscription cancelled',

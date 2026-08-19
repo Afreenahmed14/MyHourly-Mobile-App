@@ -22,7 +22,7 @@ export default function ProfileStack() {
       {role === 'company' ? (
         <>
           <Stack.Screen name="CompanyProfile" component={CompanyProfileScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="EditCompanyProfile" component={EditCompanyProfileScreen} options={{ title: 'Edit Profile' }} />
+          <Stack.Screen name="EditCompanyProfile" component={EditCompanyProfileScreen} options={{ headerShown:false, headerBackVisible:false}} />
         </>
       ) : (
         <>
@@ -30,7 +30,7 @@ export default function ProfileStack() {
           <Stack.Screen name="EditCandidateProfile" component={EditCandidateProfileScreen} options={{ title: 'Edit Profile' }} />
         </>
       )}
-      <Stack.Screen name="AvatarBuilder" component={AvatarBuilderScreen} options={{ title: 'Build your avatar' }} />
+      <Stack.Screen name="AvatarBuilder" component={AvatarBuilderScreen} options={{ headerShown:false, headerBackVisible:false}} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="About" component={AboutScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />

@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
-import { Text, Chip, Menu, Button, Avatar } from 'react-native-paper';
+import { Text, Chip, Menu, Button } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import { applicationApi } from '../../api/applicationApi';
 import EmptyState from '../../components/EmptyState';
 import LoadingView from '../../components/LoadingView';
+import SafeAvatar from '../../components/SafeAvatar';
 import { colors, spacing, radius } from '../../theme/theme';
 
 const STATUS_COLORS = {
@@ -21,9 +22,10 @@ function ApplicantRow({ application, onStatusChange }) {
   return (
     <View style={styles.card}>
       <View style={styles.row}>
-        <Avatar.Image
+        <SafeAvatar
+          uri={candidate.profileImage}
           size={44}
-          source={candidate.profileImage ? { uri: candidate.profileImage } : require('../../../assets/icon.png')}
+          fallbackSource={require('../../../assets/icon.png')}
         />
         <View style={{ flex: 1, marginLeft: spacing.sm }}>
           <Text variant="titleMedium" style={styles.name}>{candidate.name}</Text>

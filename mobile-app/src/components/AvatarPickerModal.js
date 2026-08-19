@@ -1,11 +1,18 @@
-import { View, StyleSheet, Modal, Pressable, ScrollView, Image } from 'react-native';
+import { View, StyleSheet, Modal, Pressable, ScrollView } from 'react-native';
 import { Text, IconButton } from 'react-native-paper';
+import { SvgUri } from 'react-native-svg';
 import { colors, spacing, radius } from '../theme/theme';
 
 // Illustrated, cartoon-style avatar presets rendered via DiceBear's free
 // open-source avatar API (https://www.dicebear.com — MIT/CC0 licensed
 // art, not tied to any real person or copyrighted character). Each seed
 // just deterministically picks a distinct-looking illustrated character.
+//
+// SVG, not PNG: DiceBear's free API rate-limits raster formats (PNG/JPG/
+// WebP/AVIF) to 10 req/s but allows 50 req/s for SVG. This grid fires off
+// 16 requests at once, which used to blow through the raster limit and
+// show broken-image icons for whichever avatars got 429'd. SVG also
+// renders sharper at any bubble size since it isn't capped at 256x256.
 const AVATAR_SEEDS = [
   'Buddy', 'Milo', 'Luna', 'Nova', 'Zoe', 'Kai',
   'Sasha', 'Leo', 'Maya', 'Finn', 'Ruby', 'Oscar',
@@ -13,7 +20,7 @@ const AVATAR_SEEDS = [
 ];
 
 const avatarUrl = (seed) =>
-  `https://api.dicebear.com/9.x/adventurer/png?seed=${encodeURIComponent(seed)}&size=128&backgroundType=gradientLinear`;
+  `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(seed)}&backgroundType=gradientLinear`;
 
 /**
  * Grid of illustrated avatar presets the user can pick instead of

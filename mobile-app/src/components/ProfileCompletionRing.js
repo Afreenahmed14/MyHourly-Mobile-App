@@ -1,6 +1,7 @@
 import { View, StyleSheet } from 'react-native';
-import { Text, Avatar } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import Svg, { Circle } from 'react-native-svg';
+import SafeAvatar from './SafeAvatar';
 import { colors } from '../theme/theme';
 
 /**
@@ -57,9 +58,10 @@ export default function ProfileCompletionRing({
       </Svg>
 
       <View style={[styles.avatarWrap, { width: size, height: size }]}>
-        <Avatar.Image
+        <SafeAvatar
+          uri={uri}
           size={avatarSize}
-          source={uri ? { uri } : fallbackSource}
+          fallbackSource={fallbackSource}
         />
       </View>
 

@@ -1,12 +1,13 @@
 import { useCallback, useState } from 'react';
 import { View, StyleSheet, ScrollView, Modal, Pressable, Image } from 'react-native';
-import { Text, Chip, Button, Avatar, Divider, Dialog, Portal, TextInput, IconButton } from 'react-native-paper';
+import { Text, Chip, Button, Divider, Dialog, Portal, TextInput, IconButton } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import { candidateApi } from '../../api/candidateApi';
 import { reviewApi } from '../../api/reviewApi';
 import { useAuth } from '../../context/useAuth';
 import StarRating from '../../components/StarRating';
 import LoadingView from '../../components/LoadingView';
+import SafeAvatar from '../../components/SafeAvatar';
 import { colors, spacing, radius } from '../../theme/theme';
 
 /**
@@ -78,9 +79,10 @@ export default function CandidateDetailsScreen({ route }) {
     <ScrollView style={styles.container} contentContainerStyle={{ padding: spacing.lg }}>
       <View style={styles.headerRow}>
         <Pressable onPress={() => candidate.profileImage && setPhotoViewerOpen(true)}>
-          <Avatar.Image
+          <SafeAvatar
+            uri={candidate.profileImage}
             size={72}
-            source={candidate.profileImage ? { uri: candidate.profileImage } : require('../../../assets/icon.png')}
+            fallbackSource={require('../../../assets/icon.png')}
           />
         </Pressable>
         <View style={{ marginLeft: spacing.md, flex: 1 }}>

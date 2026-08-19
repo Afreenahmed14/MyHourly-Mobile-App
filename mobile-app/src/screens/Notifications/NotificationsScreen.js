@@ -1,9 +1,10 @@
 import { View, StyleSheet, FlatList } from 'react-native';
 import { Text, IconButton, Button } from 'react-native-paper';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNotifications } from '../../context/useNotifications';
 import EmptyState from '../../components/EmptyState';
-import { colors, spacing, radius } from '../../theme/theme';
+import { colors, spacing, radius, shadows } from '../../theme/theme';
 
 const TYPE_ICON = { info: 'information-outline', warning: 'alert-outline', review: 'star-outline' };
 
@@ -33,8 +34,8 @@ export default function NotificationsScreen() {
         keyExtractor={(item) => item._id}
         contentContainerStyle={{ padding: spacing.lg, paddingTop: 0 }}
         ListEmptyComponent={<EmptyState icon="bell-outline" title="No notifications yet" />}
-        renderItem={({ item }) => (
-          <View style={[styles.card, !item.isRead && styles.unreadCard]} onTouchEnd={() => !item.isRead && markAsRead(item._id)}>
+        renderItem={({ item, index }) => (
+          <Animated.View entering={FadeInUp.delay(Math.min(index, 10) * 50).springify().damping(16)} style={[styles.card, !item.isRead && styles.unreadCard]} onTouchEnd={() => !item.isRead && markAsRead(item._id)}>
             <MaterialCommunityIcons name={TYPE_ICON[item.type] || 'bell-outline'} size={22} color={colors.primary} />
             <View style={{ flex: 1, marginLeft: spacing.sm }}>
               <Text variant="titleSmall" style={styles.title}>{item.title}</Text>
@@ -42,7 +43,7 @@ export default function NotificationsScreen() {
               <Text variant="bodySmall" style={styles.time}>{timeAgo(item.createdAt)}</Text>
             </View>
             <IconButton icon="close" size={16} onPress={() => removeNotification(item._id)} />
-          </View>
+          </Animated.View>
         )}
       />
     </View>
@@ -56,6 +57,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row', alignItems: 'flex-start', backgroundColor: colors.surface, borderRadius: radius.md,
     padding: spacing.md, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.border,
+    ...shadows.card,
   },
   unreadCard: { borderColor: colors.primary, backgroundColor: '#EEF2FF' },
   title: { color: colors.text, fontWeight: '600' },

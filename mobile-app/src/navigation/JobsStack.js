@@ -18,7 +18,7 @@ export default function JobsStack() {
       {role === 'company' ? (
         <>
           <Stack.Screen name="MyJobs" component={MyJobsScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="PostJob" component={PostJobScreen} options={{ title: 'Post a Job' }} />
+          <Stack.Screen name="PostJob" component={PostJobScreen} options={{ headerShown:false, headerBackVisible:false}} />
           <Stack.Screen name="JobApplicants" component={JobApplicantsScreen} options={{ title: 'Applicants' }} />
         </>
       ) : (

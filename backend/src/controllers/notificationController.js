@@ -71,4 +71,36 @@ const deleteNotification = asyncHandler(async (req, res) => {
   return new ApiResponse(200, null, 'Notification deleted').send(res);
 });
 
-module.exports = { getMyNotifications, markAsRead, markAllAsRead, deleteNotification };
+/**
+ * POST /api/v1/notifications/push-token
+ * Registers (or overwrites) this device's Expo push token so future
+ * notifications for this account arrive as real mobile OS notifications,
+ * not just entries in the in-app list.
+ */
+const registerPushToken = asyncHandler(async (req, res) => {
+  const { token } = req.body;
+  if (!token || typeof token !== 'string') {
+    throw ApiError.badRequest('A valid push token is required');
+  }
+
+  req.user.pushToken = token;
+  await req.user.save();
+
+  return new ApiResponse(200, null, 'Push token registered').send(res);
+});
+
+/**
+ * DELETE /api/v1/notifications/push-token
+ * Clears the stored push token, e.g. on logout, so this device stops
+ * receiving push notifications for the account that just signed out.
+ */
+const clearPushToken = asyncHandler(async (req, res) => {
+  req.user.pushToken = null;
+  await req.user.save();
+
+  return new ApiResponse(200, null, 'Push token cleared').send(res);
+});
+
+module.exports = {
+  getMyNotifications, markAsRead, markAllAsRead, deleteNotification, registerPushToken, clearPushToken,
+};

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { View, StyleSheet, Image } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -9,11 +10,18 @@ import { colors, spacing, radius } from '../theme/theme';
  * page, not on the profile itself.
  */
 export default function AvatarSection({ avatarUri, onBuild, onRemove }) {
+  // Defensive fallback: if avatarUri ever points at a format this plain
+  // <Image> can't decode (e.g. an SVG URL saved before the builder was
+  // fixed to persist PNGs), show the placeholder icon instead of a
+  // permanently blank/broken bubble.
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [avatarUri]);
+
   return (
     <View style={styles.row}>
       <View style={styles.bubble}>
-        {avatarUri ? (
-          <Image source={{ uri: avatarUri }} style={styles.bubbleImg} />
+        {avatarUri && !failed ? (
+          <Image source={{ uri: avatarUri }} style={styles.bubbleImg} onError={() => setFailed(true)} />
         ) : (
           <MaterialCommunityIcons name="emoticon-outline" size={28} color={colors.textMuted} />
         )}

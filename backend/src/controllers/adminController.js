@@ -10,6 +10,7 @@ const Skill = require('../models/Skill');
 const DeveloperType = require('../models/DeveloperType');
 const Verification = require('../models/Verification');
 const Notification = require('../models/Notification');
+const { notify } = require('../utils/notify');
 const Settings = require('../models/Settings');
 const Job = require('../models/Job');
 const { VERIFICATION_STATUS, USER_STATUS } = require('../constants/status');
@@ -101,7 +102,7 @@ const updateUserStatus = asyncHandler(async (req, res) => {
   const user = await Model.findByIdAndUpdate(req.params.id, { status }, { new: true });
   if (!user) throw ApiError.notFound('User not found');
 
-  await Notification.create({
+  await notify({
     userId: user._id,
     userModel: MODEL_NAME_BY_ROLE[role],
     title: 'Account status updated',
@@ -361,7 +362,7 @@ const reviewVerificationRequest = asyncHandler(async (req, res) => {
   const Model = request.role === 'Candidate' ? Candidate : Company;
   await Model.findByIdAndUpdate(request.profileId, { verificationStatus: status });
 
-  await Notification.create({
+  await notify({
     userId: request.profileId,
     userModel: request.role,
     title: 'Verification update',

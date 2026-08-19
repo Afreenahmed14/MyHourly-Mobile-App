@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { View, StyleSheet, FlatList, Pressable, Image } from 'react-native';
+import { View, StyleSheet, FlatList, Pressable } from 'react-native';
 import { Text, Button, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { SvgUri } from 'react-native-svg';
 import { colors, spacing, radius } from '../../theme/theme';
 
 // Illustrated, cartoon-style avatar presets rendered via DiceBear's free
@@ -22,6 +23,18 @@ const STYLE_SETS = {
   },
 };
 
+// Grid tiles render as SVG (react-native-svg's <SvgUri>, not a plain RN
+// <Image> which can't decode SVG at all). This also sidesteps DiceBear's
+// free-API rate limit, which is much stricter for raster formats
+// (10 req/s for PNG/JPG/WebP/AVIF) than for SVG (50 req/s) — with 8
+// tiles loading per category plus the preview, PNG requests were
+// getting throttled and showing up as broken images. The value we hand
+// back to the caller (and persist as `avatarImage`) is still the PNG
+// URL, since that's what plain <Image>/SafeAvatar elsewhere in the app
+// need to render it later.
+const svgUrl = (style, seed) =>
+  `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed)}&backgroundType=gradientLinear`;
+
 const avatarUrl = (style, seed) =>
   `https://api.dicebear.com/9.x/${style}/png?seed=${encodeURIComponent(seed)}&size=160&backgroundType=gradientLinear`;
 
@@ -34,10 +47,11 @@ export default function AvatarPickerScreen({ route, navigation }) {
   const { onSelect } = route.params;
   const categories = Object.keys(STYLE_SETS);
   const [category, setCategory] = useState(categories[0]);
-  const [chosen, setChosen] = useState(null);
+  const [chosenSeed, setChosenSeed] = useState(null);
   const [saving, setSaving] = useState(false);
 
   const { style, seeds } = STYLE_SETS[category];
+  const chosen = chosenSeed ? avatarUrl(style, chosenSeed) : null;
 
   const confirm = async () => {
     if (!chosen) return;
@@ -54,14 +68,14 @@ export default function AvatarPickerScreen({ route, navigation }) {
     <View style={styles.container}>
       <View style={styles.preview}>
         <View style={styles.previewRing}>
-          {chosen ? (
-            <Image source={{ uri: chosen }} style={styles.previewImg} />
+          {chosenSeed ? (
+            <SvgUri uri={svgUrl(style, chosenSeed)} width="100%" height="100%" />
           ) : (
             <MaterialCommunityIcons name="account-question-outline" size={48} color={colors.textMuted} />
           )}
         </View>
         <Text variant="bodySmall" style={styles.previewHint}>
-          {chosen ? 'Looking good — confirm below' : 'Tap a style to preview it here'}
+          {chosenSeed ? 'Looking good — confirm below' : 'Tap a style to preview it here'}
         </Text>
       </View>
 
@@ -70,7 +84,7 @@ export default function AvatarPickerScreen({ route, navigation }) {
           <Chip
             key={c}
             selected={c === category}
-            onPress={() => { setCategory(c); setChosen(null); }}
+            onPress={() => { setCategory(c); setChosenSeed(null); }}
             style={styles.chip}
             selectedColor={colors.primary}
           >
@@ -85,12 +99,11 @@ export default function AvatarPickerScreen({ route, navigation }) {
         keyExtractor={(seed) => seed}
         contentContainerStyle={styles.grid}
         renderItem={({ item: seed }) => {
-          const url = avatarUrl(style, seed);
-          const selected = chosen === url;
+          const selected = chosenSeed === seed;
           return (
-            <Pressable style={styles.tileWrap} onPress={() => setChosen(url)}>
+            <Pressable style={styles.tileWrap} onPress={() => setChosenSeed(seed)}>
               <View style={[styles.tile, selected && styles.tileSelected]}>
-                <Image source={{ uri: url }} style={styles.tileImg} />
+                <SvgUri uri={svgUrl(style, seed)} width="100%" height="100%" />
               </View>
               {selected && (
                 <MaterialCommunityIcons name="check-circle" size={20} color={colors.primary} style={styles.checkBadge} />

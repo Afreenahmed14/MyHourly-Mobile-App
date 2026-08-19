@@ -6,4 +6,6 @@ export const notificationApi = {
   markAsRead: (id) => api.patch(`/notifications/${id}/read`),
   markAllAsRead: () => api.patch('/notifications/read-all'),
   remove: (id) => api.delete(`/notifications/${id}`),
+  registerPushToken: (token) => api.post('/notifications/push-token', { token }),
+  clearPushToken: () => api.delete('/notifications/push-token'),
 };

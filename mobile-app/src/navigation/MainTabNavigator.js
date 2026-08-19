@@ -10,6 +10,8 @@ import ApplicationsStack from './ApplicationsStack';
 import SubscriptionStack from './SubscriptionStack';
 import NotificationsStack from './NotificationsStack';
 import ProfileStack from './ProfileStack';
+import HistoryStack from './HistoryStack';
+import ChatStack from './ChatStack';
 import { colors } from '../theme/theme';
 
 const Tab = createBottomTabNavigator();
@@ -23,7 +25,7 @@ const hiddenTabOptions = { tabBarButton: () => null, tabBarItemStyle: { display:
 
 /**
  * Role-aware tab bar: candidates get Jobs + Applications + Partners;
- * companies get Jobs (their postings) + Freelancers. Home, Subscription
+ * companies get Jobs (their postings) + Professionals. Home, Subscription
  * stay on the bottom bar for both roles. Notifications and Profile are
  * reachable from the persistent top navbar instead of the bottom bar.
  */
@@ -64,7 +66,7 @@ export default function MainTabNavigator() {
           name="CandidatesTab"
           component={CandidatesStack}
           options={{
-            title: role === 'candidate' ? 'Partners' : 'Freelancers',
+            title: role === 'candidate' ? 'Partners' : 'Professionals',
             tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="account-search-outline" color={color} size={size} />,
           }}
         />
@@ -73,8 +75,14 @@ export default function MainTabNavigator() {
           component={SubscriptionStack}
           options={{ title: 'Plan', tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="crown-outline" color={color} size={size} /> }}
         />
+        <Tab.Screen
+          name="HistoryTab"
+          component={HistoryStack}
+          options={{ title: 'History', tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="history" color={color} size={size} /> }}
+        />
         <Tab.Screen name="NotificationsTab" component={NotificationsStack} options={hiddenTabOptions} />
         <Tab.Screen name="ProfileTab" component={ProfileStack} options={hiddenTabOptions} />
+        <Tab.Screen name="ChatTab" component={ChatStack} options={hiddenTabOptions} />
       </Tab.Navigator>
     </View>
   );

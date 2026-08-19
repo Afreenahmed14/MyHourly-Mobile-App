@@ -21,7 +21,10 @@ export default function BookmarksScreen({ navigation }) {
     try {
       const res = await companyApi.getBookmarks();
       const list = res.data.data?.bookmarks || res.data.data || [];
-      setBookmarks(Array.isArray(list) ? list : []);
+      // A bookmarked candidate that's since been deleted comes back as
+      // `null` in this array (populate can't resolve it) — drop those
+      // rather than crashing CandidateCard/keyExtractor on a null entry.
+      setBookmarks(Array.isArray(list) ? list.filter(Boolean) : []);
     } finally {
       setLoading(false);
     }
@@ -47,9 +50,10 @@ export default function BookmarksScreen({ navigation }) {
             <Text style={styles.title}>Bookmarked Engineers</Text>
           </View>
         }
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <CandidateCard
             candidate={{ ...item, isBookmarked: true }}
+            index={index}
             onPress={() => navigation.navigate('CandidateDetails', { candidateId: item._id })}
             onBookmarkToggle={() => removeBookmark(item._id)}
           />

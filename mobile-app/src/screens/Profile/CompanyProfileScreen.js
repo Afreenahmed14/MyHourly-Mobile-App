@@ -163,7 +163,7 @@ export default function CompanyProfileScreen({ navigation }) {
         Post a Job
       </Button>
       <Button mode="outlined" style={styles.actionBtn} onPress={() => navigation.navigate('CandidatesTab')}>
-        Browse Freelancers
+        Browse Professionals
       </Button>
       <Button mode="outlined" style={styles.actionBtn} onPress={() => navigation.navigate('JobsTab', { screen: 'MyJobs' })}>
         My Job Postings

@@ -3,7 +3,7 @@ const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const Application = require('../models/Application');
 const Job = require('../models/Job');
-const Notification = require('../models/Notification');
+const { notify } = require('../utils/notify');
 const { PRODUCTS, QUOTA_KEYS, getQuota } = require('../constants/plans');
 const { consumeQuota } = require('../utils/quota');
 const { ensureSubscriptionFresh } = require('./subscriptionController');
@@ -52,7 +52,7 @@ const applyToJob = asyncHandler(async (req, res) => {
   job.applicationsCount = (job.applicationsCount || 0) + 1;
   await job.save();
 
-  await Notification.create({
+  await notify({
     userId: job.companyId,
     userModel: 'Company',
     title: 'New application received',
@@ -122,7 +122,7 @@ const updateApplicationStatus = asyncHandler(async (req, res) => {
 
   const job = await Job.findById(application.jobId).select('title');
 
-  await Notification.create({
+  await notify({
     userId: application.candidateId,
     userModel: 'Candidate',
     title: 'Application status updated',

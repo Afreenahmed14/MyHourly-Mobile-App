@@ -20,3 +20,13 @@ export const legacyColors = {
 export const legacySpacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 };
 
 export const legacyRadius = { sm: 8, md: 12, lg: 16, full: 999 };
+
+export const legacyShadows = {
+  card: {
+    shadowColor: '#111827',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+};

@@ -1,8 +1,12 @@
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { View, Text, Image, StyleSheet } from 'react-native';
+import Animated, { FadeInUp, Easing } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/useAuth';
 import { useSubscription } from '../context/useSubscription';
-import { legacyColors as colors, legacyRadius as radius, legacySpacing as spacing } from '../theme/legacyTheme';
+import { resolveImageUrl } from '../constants/config';
+import AnimatedPressable from './AnimatedPressable';
+import { legacyColors as colors, legacyRadius as radius, legacySpacing as spacing, legacyShadows as shadows } from '../theme/legacyTheme';
 
 function Stars({ rating }) {
   const stars = [];
@@ -22,18 +26,33 @@ function Stars({ rating }) {
  * replaces the reference app's static top-right slot when a company is
  * browsing.
  */
-export default function CandidateCard({ candidate, onPress, onBookmarkToggle }) {
+export default function CandidateCard({ candidate, onPress, onBookmarkToggle, index = 0 }) {
   const { role } = useAuth();
   const { subscription } = useSubscription();
+  const [imageFailed, setImageFailed] = useState(false);
+
+  // `candidate` can come through as null/undefined — e.g. a bookmarked
+  // candidate that's since been deleted (populate returns null for that
+  // entry) still shows up as a row in the bookmarks list. Bail out to
+  // nothing rather than crashing the whole screen on `.primarySkills` of
+  // undefined.
+  if (!candidate) return null;
+
   const skills = candidate.primarySkills || candidate.skills || [];
   const showLockBar = role === 'company' && !subscription;
+  const avatarUri = resolveImageUrl(candidate.profileImage);
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
+    <Animated.View entering={FadeInUp.delay(Math.min(index, 8) * 60).duration(280).easing(Easing.out(Easing.cubic))}>
+    <AnimatedPressable style={styles.card} onPress={onPress}>
       <View style={styles.inner}>
         <View style={styles.topRow}>
-          {candidate.profileImage ? (
-            <Image source={{ uri: candidate.profileImage }} style={styles.avatarImage} />
+          {avatarUri && !imageFailed ? (
+            <Image
+              source={{ uri: avatarUri }}
+              style={styles.avatarImage}
+              onError={() => setImageFailed(true)}
+            />
           ) : (
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{(candidate.name || '?').charAt(0)}</Text>
@@ -86,7 +105,8 @@ export default function CandidateCard({ candidate, onPress, onBookmarkToggle }) 
           <Text style={styles.lockText}>Unlock contact with a subscription</Text>
         </View>
       )}
-    </TouchableOpacity>
+    </AnimatedPressable>
+    </Animated.View>
   );
 }
 
@@ -98,6 +118,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     marginBottom: spacing.md,
     overflow: 'hidden',
+    // iOS clips shadowing on overflow:hidden views, but Android's
+    // elevation still renders — good enough tradeoff to keep the
+    // rounded-corner lockBar clipping intact on both platforms.
+    ...shadows.card,
   },
   inner: { padding: spacing.md },
   topRow: { flexDirection: 'row', alignItems: 'flex-start' },

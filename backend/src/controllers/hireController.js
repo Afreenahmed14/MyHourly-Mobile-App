@@ -3,7 +3,7 @@ const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const Candidate = require('../models/Candidate');
 const ContactUnlock = require('../models/ContactUnlock');
-const Notification = require('../models/Notification');
+const { notify } = require('../utils/notify');
 const {
   PRODUCTS, QUOTA_KEYS, getQuota, isPaidTier,
 } = require('../constants/plans');
@@ -80,7 +80,7 @@ const hireCandidate = asyncHandler(async (req, res) => {
       candidateId: candidate._id,
     });
 
-    await Notification.create({
+    await notify({
       userId: candidate._id,
       userModel: 'Candidate',
       title: "You've been hired!",
@@ -127,7 +127,7 @@ const hireCandidate = asyncHandler(async (req, res) => {
       candidateId: candidate._id,
     });
 
-    await Notification.create({
+    await notify({
       userId: candidate._id,
       userModel: 'Candidate',
       title: 'New project partner request',

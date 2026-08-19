@@ -11,7 +11,7 @@ export default function SubscriptionStack() {
   return (
     <Stack.Navigator screenOptions={headerOptions} initialRouteName="SubscriptionStatus">
       <Stack.Screen name="SubscriptionStatus" component={SubscriptionStatusScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Plans" component={PlansScreen} options={{ title: 'Plans' }} />
+      <Stack.Screen name="Plans" component={PlansScreen} options={{ headerShown:false, headerBackVisible:false }} />
       <Stack.Screen name="SubscriptionCheckout" component={SubscriptionCheckoutScreen} options={{ title: 'Checkout' }} />
     </Stack.Navigator>
   );

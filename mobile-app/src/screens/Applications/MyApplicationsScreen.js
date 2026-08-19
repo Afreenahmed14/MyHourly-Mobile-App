@@ -1,11 +1,12 @@
 import { useCallback, useState } from 'react';
 import { View, StyleSheet, FlatList, Alert } from 'react-native';
 import { Text, Chip, IconButton } from 'react-native-paper';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/native';
 import { applicationApi } from '../../api/applicationApi';
 import EmptyState from '../../components/EmptyState';
 import LoadingView from '../../components/LoadingView';
-import { colors, spacing, radius } from '../../theme/theme';
+import { colors, spacing, radius, shadows } from '../../theme/theme';
 
 const STATUS_COLORS = {
   applied: '#E0E7FF', shortlisted: '#FEF3C7', hired: '#DCFCE7', rejected: '#FEE2E2',
@@ -48,8 +49,8 @@ export default function MyApplicationsScreen({ navigation }) {
         keyExtractor={(item) => item._id}
         contentContainerStyle={{ padding: spacing.lg }}
         ListEmptyComponent={<EmptyState icon="file-document-outline" title="No applications yet" subtitle="Jobs you apply to will show up here." />}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
+        renderItem={({ item, index }) => (
+          <Animated.View entering={FadeInUp.delay(Math.min(index, 8) * 60).springify().damping(16)} style={styles.card}>
             <View style={styles.rowBetween}>
               <Text
                 variant="titleMedium"
@@ -67,7 +68,7 @@ export default function MyApplicationsScreen({ navigation }) {
             <Chip compact style={{ backgroundColor: STATUS_COLORS[item.status] || colors.border, alignSelf: 'flex-start', marginTop: spacing.xs }}>
               {item.status}
             </Chip>
-          </View>
+          </Animated.View>
         )}
       />
     </View>
@@ -79,6 +80,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md,
     marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border,
+    ...shadows.card,
   },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   title: { color: colors.text, fontWeight: '700', flex: 1 },

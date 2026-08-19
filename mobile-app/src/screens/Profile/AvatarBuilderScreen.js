@@ -1,8 +1,11 @@
-import { useState } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Image } from 'react-native';
+import { useState, useMemo } from 'react';
+import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { SvgXml } from 'react-native-svg';
 import { colors, spacing, radius } from '../../theme/theme';
+import { createAvatar } from '@dicebear/core';
+import { avataaars } from '@dicebear/collection';
 
 // Bitmoji/Snapchat-style avatar builder: pick a value per facial
 // feature and the preview updates live, rendered through DiceBear's
@@ -64,6 +67,35 @@ const CATEGORIES = [
   },
 ];
 
+// DiceBear's avataaars schema only accepts raw hex strings for
+// skinColor/hairColor (see the `pattern: "^(transparent|[a-fA-F0-9]{6})$"`
+// in the schema) — it does NOT accept the friendly option names shown in
+// the picker UI. Passing 'brown' straight through made DiceBear treat it
+// as a CSS color name, which SvgXml/react-native-svg then rejected as
+// `"#brown" is not a valid color or brush` (and silently fell back to
+// nothing for every swatch). These map each friendly name to the exact
+// hex DiceBear itself ships as that named swatch's default.
+const SKIN_COLOR_HEX = {
+  tanned: 'fd9841',
+  yellow: 'f8d25c',
+  pale: 'ffdbb4',
+  light: 'edb98a',
+  brown: 'd08b5b',
+  darkBrown: 'ae5d29',
+  black: '614335',
+};
+const HAIR_COLOR_HEX = {
+  auburn: 'a55728',
+  black: '2c1b18',
+  blonde: 'b58143',
+  blondeGolden: 'd6b370',
+  brown: '724133',
+  brownDark: '4a312c',
+  platinum: 'ecdcbf',
+  red: 'c93305',
+  silverGray: 'e8e1e1',
+};
+
 const DEFAULTS = {
   skinColor: 'light',
   top: 'shortFlat',
@@ -75,19 +107,53 @@ const DEFAULTS = {
   clothing: 'shirtCrewNeck',
 };
 
-const swatchPreviewUrl = (category, value, base) => {
-  const params = new URLSearchParams({ seed: 'preview', size: '64', ...base, [category]: value });
-  return `https://api.dicebear.com/10.x/avataaars/png?${params.toString()}`;
+// Generated locally with @dicebear/core — no network call, so the
+// flakiness we were hitting against api.dicebear.com's shared CDN
+// (edge-cached error responses for a given query string) can't happen
+// here at all. Each option is wrapped in an array because DiceBear's
+// schema options are all "pick one of N" lists; a single-element array
+// pins it to exactly that value. accessoriesProbability/hatProbability
+// etc. default to 100 whenever a non-"none" value is supplied, so we
+// don't need to set those explicitly.
+const generateAvatarSvg = (choices, seed) => {
+  try {
+    const avatar = createAvatar(avataaars, {
+      seed,
+      backgroundType: ['gradientLinear'],
+      skinColor: [SKIN_COLOR_HEX[choices.skinColor]],
+      top: [choices.top],
+      hairColor: [HAIR_COLOR_HEX[choices.hairColor]],
+      eyes: [choices.eyes],
+      eyebrows: [choices.eyebrows],
+      mouth: [choices.mouth],
+      accessories: [choices.accessories],
+      accessoriesProbability: choices.accessories === 'none' ? 0 : 100,
+      clothing: [choices.clothing],
+    });
+    return avatar.toString();
+  } catch (err) {
+    console.warn('[AvatarBuilder] local SVG generation failed:', choices, err);
+    return null;
+  }
 };
 
-const buildAvatarUrl = (choices) => {
+// The URL that actually gets *saved* as `avatarImage` still needs to be
+// renderable by a plain React Native <Image> everywhere else it shows
+// up (AvatarSection preview bubble, the candidate home page, etc.), and
+// RN's <Image> cannot decode SVG. @dicebear/core can't rasterize to PNG
+// outside a browser/canvas environment, so for the saved avatar we still
+// point at DiceBear's hosted PNG endpoint (same artwork, same params) —
+// only the in-builder preview/swatches are generated fully offline.
+const buildAvatarPngUrl = (choices) => {
   const params = new URLSearchParams({
     seed: 'my-avatar',
-    size: '200',
     backgroundType: 'gradientLinear',
+    size: '256',
     ...choices,
+    skinColor: SKIN_COLOR_HEX[choices.skinColor],
+    hairColor: HAIR_COLOR_HEX[choices.hairColor],
   });
-  return `https://api.dicebear.com/10.x/avataaars/png?${params.toString()}`;
+  return `https://api.dicebear.com/9.x/avataaars/png?${params.toString()}`;
 };
 
 const randomChoices = () => {
@@ -98,22 +164,16 @@ const randomChoices = () => {
   return picked;
 };
 
-// Small wrapper so a single bad image (network hiccup, etc.) shows a
-// visible broken-image icon instead of silently rendering as blank.
-function Swatch({ uri, selected, onPress }) {
-  const [failed, setFailed] = useState(false);
+// Small wrapper so a single bad generation shows a visible broken-image
+// icon instead of silently rendering as blank.
+function Swatch({ svg, selected, onPress }) {
   return (
     <Pressable style={styles.swatchWrap} onPress={onPress}>
       <View style={[styles.swatch, selected && styles.swatchSelected]}>
-        {failed ? (
-          <MaterialCommunityIcons name="image-broken-variant" size={20} color={colors.textMuted} />
+        {svg ? (
+          <SvgXml xml={svg} width="100%" height="100%" />
         ) : (
-          <Image
-            source={{ uri }}
-            style={styles.swatchImg}
-            onLoadStart={() => setFailed(false)}
-            onError={() => setFailed(true)}
-          />
+          <MaterialCommunityIcons name="image-broken-variant" size={20} color={colors.textMuted} />
         )}
       </View>
       {selected && (
@@ -132,14 +192,29 @@ export default function AvatarBuilderScreen({ route, navigation }) {
   const { initialChoices, returnScreen } = route.params || {};
   const [choices, setChoices] = useState(initialChoices || DEFAULTS);
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].key);
-  const [previewFailed, setPreviewFailed] = useState(false);
 
-  const previewUrl = buildAvatarUrl(choices);
   const category = CATEGORIES.find((c) => c.key === activeCategory);
 
-  const pick = (value) => setChoices((prev) => ({ ...prev, [activeCategory]: value }));
+  const previewSvg = useMemo(() => generateAvatarSvg(choices, 'my-avatar'), [choices]);
 
-  const shuffle = () => setChoices(randomChoices());
+  // Swatch thumbnails for the active category — only these depend on
+  // activeCategory, so we don't regenerate the other seven categories'
+  // swatches every time the user flips tabs.
+  const swatchSvgs = useMemo(() => {
+    const map = {};
+    category.options.forEach((opt) => {
+      map[opt] = generateAvatarSvg({ ...choices, [activeCategory]: opt }, 'preview');
+    });
+    return map;
+  }, [activeCategory, choices, category]);
+
+  const pick = (value) => {
+    setChoices((prev) => ({ ...prev, [activeCategory]: value }));
+  };
+
+  const shuffle = () => {
+    setChoices(randomChoices());
+  };
 
   // Navigate back with the result as plain, serializable params instead
   // of passing a callback function through route params (functions
@@ -148,7 +223,9 @@ export default function AvatarBuilderScreen({ route, navigation }) {
   // does its own saving.
   const confirm = () => {
     navigation.navigate(returnScreen || 'EditCandidateProfile', {
-      avatarResult: { url: previewUrl, choices },
+      // Save the PNG variant (see buildAvatarPngUrl) — this is what ends
+      // up in a plain <Image> on the edit-profile bubble and the home page.
+      avatarResult: { url: buildAvatarPngUrl(choices), choices },
     });
   };
 
@@ -156,15 +233,10 @@ export default function AvatarBuilderScreen({ route, navigation }) {
     <View style={styles.container}>
       <View style={styles.previewRow}>
         <View style={styles.previewRing}>
-          {previewFailed ? (
-            <MaterialCommunityIcons name="image-broken-variant" size={32} color={colors.textMuted} />
+          {previewSvg ? (
+            <SvgXml xml={previewSvg} width="100%" height="100%" />
           ) : (
-            <Image
-              source={{ uri: previewUrl }}
-              style={styles.previewImg}
-              onLoadStart={() => setPreviewFailed(false)}
-              onError={() => setPreviewFailed(true)}
-            />
+            <MaterialCommunityIcons name="image-broken-variant" size={32} color={colors.textMuted} />
           )}
         </View>
         <Pressable style={styles.shuffleBtn} onPress={shuffle}>
@@ -196,7 +268,7 @@ export default function AvatarBuilderScreen({ route, navigation }) {
           return (
             <Swatch
               key={opt}
-              uri={swatchPreviewUrl(activeCategory, opt, choices)}
+              svg={swatchSvgs[opt]}
               selected={selected}
               onPress={() => pick(opt)}
             />
@@ -243,6 +315,7 @@ const styles = StyleSheet.create({
   swatch: {
     width: 64, height: 64, borderRadius: radius.md, overflow: 'hidden',
     borderWidth: 2, borderColor: colors.border, backgroundColor: colors.surface,
+    alignItems: 'center', justifyContent: 'center',
   },
   swatchSelected: { borderColor: colors.primary, borderWidth: 3 },
   swatchImg: { width: '100%', height: '100%' },

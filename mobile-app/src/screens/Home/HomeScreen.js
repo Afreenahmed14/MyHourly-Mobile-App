@@ -1,14 +1,20 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, ScrollView, Linking, Pressable, Share, Image } from 'react-native';
-import { Text, Avatar, Button, Chip, IconButton } from 'react-native-paper';
+import { Text, Button, Chip, IconButton } from 'react-native-paper';
+import Animated, {
+  FadeInUp, FadeInRight, useAnimatedStyle, useSharedValue, withTiming, Easing,
+} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import AnimatedPressable from '../../components/AnimatedPressable';
 import { candidateApi } from '../../api/candidateApi';
 import { jobApi } from '../../api/jobApi';
+import { subscriptionApi } from '../../api/subscriptionApi';
 import { useAuth } from '../../context/useAuth';
 import StarRating from '../../components/StarRating';
 import LoadingView from '../../components/LoadingView';
+import SafeAvatar from '../../components/SafeAvatar';
 import { getProfileCompletion } from '../../utils/profileCompletion';
 import { colors, spacing, radius } from '../../theme/theme';
 
@@ -62,6 +68,7 @@ function CandidateHome({ navigation }) {
   const [available, setAvailable] = useState(true);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [flirtyLine] = useState(() => FLIRTY_LINES[Math.floor(Math.random() * FLIRTY_LINES.length)]);
+  const [avatarFailed, setAvatarFailed] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -136,42 +143,22 @@ function CandidateHome({ navigation }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      {/* Top status bar */}
-      <LinearGradient
-        colors={[colors.secondary, colors.primaryDark]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.statusBar}
-      >
-        <Pressable style={styles.availabilityPill} onPress={toggleAvailable}>
-          <View style={[styles.availabilityDot, available && styles.availabilityDotOn]} />
-          <Text style={styles.availabilityText}>{available ? 'Available' : 'Offline'}</Text>
-        </Pressable>
-
-        <View style={styles.statusIconsRow}>
-          <Pressable style={styles.statusIconBtn} onPress={openSupport}>
-            <Ionicons name="headset-outline" size={16} color={colors.text} />
-            <Text style={styles.statusIconText}>HELP</Text>
-          </Pressable>
-          <Pressable style={[styles.statusIconBtn, styles.reportBtn]} onPress={reportIssue}>
-            <Text style={styles.reportBtnText}>Report</Text>
-          </Pressable>
-          <View style={styles.badgeCircle}>
-            <MaterialCommunityIcons name="star-circle" size={18} color={colors.secondary} />
-            <Text style={styles.badgeText}>{badgeLabel}</Text>
-          </View>
-        </View>
-      </LinearGradient>
+    
 
       <View style={styles.body}>
         {/* Bold headline banner + CTA. The candidate's optional
             Bitmoji-style avatar sits here when they've built one — the
             real profile photo still only shows up in the top navbar. */}
+        <Animated.View entering={FadeInUp.duration(450).springify().damping(18)}>
         <View style={styles.greetingRow}>
           <View style={{ flex: 1 }}>
             <View style={styles.headlineRow}>
-              {!!candidate.avatarImage && (
-                <Image source={{ uri: candidate.avatarImage }} style={styles.homeAvatar} />
+              {!!candidate.avatarImage && !avatarFailed && (
+                <Image
+                  source={{ uri: candidate.avatarImage }}
+                  style={styles.homeAvatar}
+                  onError={() => setAvatarFailed(true)}
+                />
               )}
               <Text style={styles.headline}>New jobs{'\n'}live now!</Text>
             </View>
@@ -181,14 +168,16 @@ function CandidateHome({ navigation }) {
         <Text style={styles.headlineSub}>
           {jobs.length} opportunit{jobs.length === 1 ? 'y' : 'ies'} posted recently
         </Text>
-        <Pressable style={styles.ctaBtn} onPress={openJobsList}>
+        <AnimatedPressable style={styles.ctaBtn} onPress={openJobsList} scaleTo={0.98}>
           <Text style={styles.ctaBtnText}>Let's browse jobs</Text>
           <MaterialCommunityIcons name="chevron-right" size={22} color="#fff" />
-        </Pressable>
+        </AnimatedPressable>
+        </Animated.View>
       </View>
 
       {/* Invite a friend — real native share, no fabricated payout */}
-      <Pressable style={styles.inviteBar} onPress={inviteFriend}>
+      <Animated.View entering={FadeInUp.delay(80).duration(450).springify().damping(18)}>
+      <AnimatedPressable style={styles.inviteBar} onPress={inviteFriend} scaleTo={0.98}>
         <View style={styles.inviteLeft}>
           <Ionicons name="gift-outline" size={20} color={colors.text} />
           <Text style={styles.inviteText}>Invite a friend</Text>
@@ -197,11 +186,12 @@ function CandidateHome({ navigation }) {
           <Text style={styles.invitePillText}>Share app</Text>
           <MaterialCommunityIcons name="chevron-right" size={16} color="#fff" />
         </View>
-      </Pressable>
+      </AnimatedPressable>
+      </Animated.View>
 
       {/* New jobs — promo-style carousel with a page counter */}
       {!!jobs.length && (
-        <View style={styles.carouselSection}>
+        <Animated.View entering={FadeInUp.delay(140).duration(450).springify().damping(18)} style={styles.carouselSection}>
           <ScrollView
             horizontal
             pagingEnabled={false}
@@ -212,7 +202,8 @@ function CandidateHome({ navigation }) {
             onMomentumScrollEnd={onCarouselScroll}
           >
             {jobs.map((job, i) => (
-              <Pressable key={job._id} onPress={() => openJob(job._id)}>
+              <Animated.View key={job._id} entering={FadeInRight.delay(i * 90).duration(400).springify().damping(16)}>
+              <AnimatedPressable onPress={() => openJob(job._id)} scaleTo={0.96}>
                 <LinearGradient
                   colors={JOB_CARD_GRADIENTS[i % JOB_CARD_GRADIENTS.length]}
                   start={{ x: 0, y: 0 }}
@@ -230,13 +221,15 @@ function CandidateHome({ navigation }) {
                       </View>
                     )}
                   </View>
-                  <Avatar.Image
+                  <SafeAvatar
+                    uri={job.companyId?.logo}
                     size={48}
-                    source={job.companyId?.logo ? { uri: job.companyId.logo } : require('../../../assets/icon.png')}
+                    fallbackSource={require('../../../assets/icon.png')}
                     style={styles.jobCardLogo}
                   />
                 </LinearGradient>
-              </Pressable>
+              </AnimatedPressable>
+              </Animated.View>
             ))}
           </ScrollView>
 
@@ -246,10 +239,11 @@ function CandidateHome({ navigation }) {
             </View>
             <Button mode="text" compact onPress={openJobsList}>See all</Button>
           </View>
-        </View>
+        </Animated.View>
       )}
 
       <View style={styles.body}>
+        <Animated.View entering={FadeInUp.delay(180).duration(450).springify().damping(18)}>
         <View style={styles.row}>
           <Button
             mode="outlined"
@@ -264,9 +258,10 @@ function CandidateHome({ navigation }) {
         {!!candidate.hourlyRate && (
           <Text variant="titleMedium" style={styles.rate}>₹{candidate.hourlyRate}/hr</Text>
         )}
+        </Animated.View>
 
         {/* Profile-completion milestone tracker — real % from candidate data */}
-        <View style={styles.incentiveCard}>
+        <Animated.View entering={FadeInUp.delay(240).duration(450).springify().damping(18)} style={styles.incentiveCard}>
           <View style={styles.incentiveHeaderRow}>
             <View>
               <Text style={styles.incentiveTitle}>Complete your profile</Text>
@@ -281,14 +276,17 @@ function CandidateHome({ navigation }) {
 
           <View style={styles.trackRow}>
             <View style={styles.trackLine}>
-              <View style={[styles.trackLineFill, { width: `${completion}%` }]} />
+              <Animated.View
+                entering={FadeInRight.delay(320).duration(600).easing(Easing.out(Easing.exp))}
+                style={[styles.trackLineFill, { width: `${completion}%` }]}
+              />
             </View>
           </View>
           <View style={styles.milestoneRow}>
-            {milestones.map((m) => {
+            {milestones.map((m, mi) => {
               const reached = completion >= m;
               return (
-                <View key={m} style={styles.milestoneItem}>
+                <Animated.View key={m} entering={FadeInUp.delay(280 + mi * 60).springify().damping(14)} style={styles.milestoneItem}>
                   <View style={[styles.milestoneDot, reached && styles.milestoneDotReached]}>
                     <Ionicons
                       name={reached ? 'checkmark' : 'lock-closed'}
@@ -297,11 +295,11 @@ function CandidateHome({ navigation }) {
                     />
                   </View>
                   <Text style={styles.milestoneLabel}>{m}%</Text>
-                </View>
+                </Animated.View>
               );
             })}
           </View>
-        </View>
+        </Animated.View>
 
         {/* About & skills — collapsed by default, expands on tap */}
         <View style={styles.expandHeader}>
@@ -340,37 +338,156 @@ const JOB_CARD_GRADIENTS = [
   ['#0891B2', '#164E63'],
 ];
 
+// Distinct icon-tile quick actions for the company dashboard — deliberately
+// a different visual language from the candidate side's carousel/incentive
+// layout, so the two roles don't feel like reskins of the same screen.
+const COMPANY_ACTIONS = [
+  { key: 'post', label: 'Post a Job', icon: 'plus-box-outline', nav: ['JobsTab', 'PostJob'] },
+  { key: 'browse', label: 'Browse Talent', icon: 'account-search-outline', nav: ['CandidatesTab'] },
+  { key: 'jobs', label: 'My Postings', icon: 'briefcase-outline', nav: ['JobsTab', 'MyJobs'] },
+  { key: 'hired', label: 'Hired', icon: 'account-check-outline', nav: ['CandidatesTab', 'HiredCandidates'] },
+];
+
+const JOB_STATUS_META = {
+  open: { label: 'Open', color: colors.success },
+  closed: { label: 'Closed', color: colors.textMuted },
+  filled: { label: 'Filled', color: colors.primary },
+  draft: { label: 'Draft', color: colors.secondary },
+};
+
 function CompanyHome({ navigation }) {
   const { user } = useAuth();
+  const [jobs, setJobs] = useState([]);
+  const [subscription, setSubscription] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [jobsRes, subRes] = await Promise.allSettled([
+        jobApi.getMine(),
+        subscriptionApi.getStatus(),
+      ]);
+      if (jobsRes.status === 'fulfilled') setJobs(jobsRes.value.data.data?.jobs || []);
+      if (subRes.status === 'fulfilled') setSubscription(subRes.value.data.data?.subscription || null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  if (loading && !jobs.length) return <LoadingView />;
+
+  const openCount = jobs.filter((j) => j.status === 'open').length;
+  const recentJobs = jobs.slice(0, 3);
+  const planLabel = subscription?.name || (subscription?.tier ? subscription.tier : 'Free');
+
+  const go = ([screen, nested]) => {
+    if (nested) navigation.navigate(screen, { screen: nested });
+    else navigation.navigate(screen);
+  };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: spacing.lg }}>
-      <View style={styles.header}>
-        <View style={{ flex: 1 }}>
-          <Text variant="bodyMedium" style={styles.greeting}>Welcome back,</Text>
-          <Text variant="headlineSmall" style={styles.name}>{user?.companyName || user?.name}</Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.companyScrollContent}>
+      <Animated.View entering={FadeInUp.duration(450).springify().damping(18)}>
+      <LinearGradient colors={[colors.primaryDark, colors.primary]} style={styles.companyHero}>
+        <View style={styles.companyHeroTop}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.companyGreeting}>Welcome back,</Text>
+            <Text style={styles.companyName} numberOfLines={1}>{user?.companyName || user?.name}</Text>
+          </View>
+          <SafeAvatar
+            uri={user?.profileImage || user?.logo}
+            size={52}
+            fallbackSource={require('../../../assets/icon.png')}
+            style={styles.companyAvatar}
+          />
         </View>
-        <Avatar.Image
-          size={48}
-          source={
-            (user?.profileImage || user?.logo)
-              ? { uri: user.profileImage || user.logo }
-              : require('../../../assets/icon.png')
-          }
-        />
+
+        <View style={styles.companyPlanPill}>
+          <MaterialCommunityIcons name="shield-star-outline" size={14} color="#fff" />
+          <Text style={styles.companyPlanText}>{planLabel} plan</Text>
+        </View>
+
+        <View style={styles.companyStatsRow}>
+          <View style={styles.companyStatCard}>
+            <Text style={styles.companyStatValue}>{jobs.length}</Text>
+            <Text style={styles.companyStatLabel}>Total postings</Text>
+          </View>
+          <View style={styles.companyStatDivider} />
+          <View style={styles.companyStatCard}>
+            <Text style={styles.companyStatValue}>{openCount}</Text>
+            <Text style={styles.companyStatLabel}>Open now</Text>
+          </View>
+          <View style={styles.companyStatDivider} />
+          <View style={styles.companyStatCard}>
+            <Text style={styles.companyStatValue}>{jobs.length - openCount}</Text>
+            <Text style={styles.companyStatLabel}>Wrapped up</Text>
+          </View>
+        </View>
+      </LinearGradient>
+      </Animated.View>
+
+      <View style={styles.companyBody}>
+        <Text style={styles.companySectionTitle}>Quick actions</Text>
+        <View style={styles.companyActionGrid}>
+          {COMPANY_ACTIONS.map((action, ai) => (
+            <Animated.View key={action.key} entering={FadeInUp.delay(100 + ai * 60).springify().damping(16)} style={{ width: '47%' }}>
+            <AnimatedPressable style={styles.companyActionTile} onPress={() => go(action.nav)} scaleTo={0.95}>
+              <View style={styles.companyActionIconWrap}>
+                <MaterialCommunityIcons name={action.icon} size={22} color={colors.primary} />
+              </View>
+              <Text style={styles.companyActionLabel}>{action.label}</Text>
+            </AnimatedPressable>
+            </Animated.View>
+          ))}
+        </View>
+
+        <View style={styles.companyListHeader}>
+          <Text style={styles.companySectionTitle}>Recent postings</Text>
+          {jobs.length > 3 && (
+            <Pressable onPress={() => go(['JobsTab', 'MyJobs'])}>
+              <Text style={styles.companySeeAll}>See all</Text>
+            </Pressable>
+          )}
+        </View>
+
+        {recentJobs.length ? (
+          recentJobs.map((job, ji) => {
+            const meta = JOB_STATUS_META[job.status] || JOB_STATUS_META.open;
+            return (
+              <Animated.View key={job._id} entering={FadeInUp.delay(220 + ji * 70).springify().damping(16)}>
+              <AnimatedPressable
+                style={styles.companyJobRow}
+                onPress={() => go(['JobsTab', 'MyJobs'])}
+              >
+                <View style={styles.companyJobIconWrap}>
+                  <MaterialCommunityIcons name="briefcase-variant-outline" size={18} color={colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.companyJobTitle} numberOfLines={1}>{job.title}</Text>
+                  <Text style={styles.companyJobSub} numberOfLines={1}>
+                    {job.developerType || 'General'} · {job.jobType || 'Contract'}
+                  </Text>
+                </View>
+                <View style={[styles.companyJobStatusPill, { backgroundColor: `${meta.color}1A` }]}>
+                  <Text style={[styles.companyJobStatusText, { color: meta.color }]}>{meta.label}</Text>
+                </View>
+              </AnimatedPressable>
+              </Animated.View>
+            );
+          })
+        ) : (
+          <View style={styles.companyEmptyState}>
+            <MaterialCommunityIcons name="briefcase-plus-outline" size={28} color={colors.textMuted} />
+            <Text style={styles.companyEmptyText}>No jobs posted yet</Text>
+            <Button mode="contained" compact onPress={() => go(['JobsTab', 'PostJob'])} style={{ marginTop: spacing.sm }}>
+              Post your first job
+            </Button>
+          </View>
+        )}
       </View>
-
-      <Text variant="titleMedium" style={styles.sectionTitle}>Quick actions</Text>
-
-      <Button mode="contained" style={styles.actionBtn} onPress={() => navigation.navigate('JobsTab', { screen: 'PostJob' })}>
-        Post a Job
-      </Button>
-      <Button mode="outlined" style={styles.actionBtn} onPress={() => navigation.navigate('CandidatesTab')}>
-        Browse Freelancers
-      </Button>
-      <Button mode="outlined" style={styles.actionBtn} onPress={() => navigation.navigate('JobsTab', { screen: 'MyJobs' })}>
-        My Job Postings
-      </Button>
     </ScrollView>
   );
 }
@@ -491,4 +608,65 @@ const styles = StyleSheet.create({
 
   sectionTitle: { color: colors.text, fontWeight: '700', marginBottom: spacing.md },
   actionBtn: { marginBottom: spacing.md },
+
+  // --- Company dashboard: distinct visual language from the candidate
+  // home screen (gradient stat hero + icon-tile actions instead of a
+  // carousel/incentive-tracker layout). ---
+  companyScrollContent: { paddingBottom: spacing.xl },
+  companyHero: {
+    paddingTop: spacing.xl, paddingBottom: spacing.lg, paddingHorizontal: spacing.lg,
+    borderBottomLeftRadius: radius.lg, borderBottomRightRadius: radius.lg,
+  },
+  companyHeroTop: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
+  companyGreeting: { color: 'rgba(255,255,255,0.75)', fontSize: 13 },
+  companyName: { color: '#fff', fontWeight: '800', fontSize: 20, marginTop: 2 },
+  companyAvatar: { borderWidth: 2, borderColor: 'rgba(255,255,255,0.6)' },
+  companyPlanPill: {
+    flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm, paddingVertical: 5, marginBottom: spacing.lg,
+  },
+  companyPlanText: { color: '#fff', fontWeight: '700', fontSize: 11, textTransform: 'capitalize' },
+  companyStatsRow: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: radius.lg, paddingVertical: spacing.md,
+  },
+  companyStatCard: { flex: 1, alignItems: 'center' },
+  companyStatValue: { color: '#fff', fontWeight: '800', fontSize: 20 },
+  companyStatLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 11, marginTop: 2, textAlign: 'center' },
+  companyStatDivider: { width: 1, height: 28, backgroundColor: 'rgba(255,255,255,0.25)' },
+
+  companyBody: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
+  companySectionTitle: { color: colors.text, fontWeight: '700', fontSize: 15, marginBottom: spacing.md },
+  companyActionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.xl },
+  companyActionTile: {
+    width: '47%', backgroundColor: colors.surface, borderRadius: radius.lg,
+    borderWidth: 1, borderColor: colors.border, padding: spacing.md,
+  },
+  companyActionIconWrap: {
+    width: 38, height: 38, borderRadius: radius.md, backgroundColor: `${colors.primary}14`,
+    alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm,
+  },
+  companyActionLabel: { color: colors.text, fontWeight: '700', fontSize: 13 },
+
+  companyListHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  companySeeAll: { color: colors.primary, fontWeight: '700', fontSize: 12, marginBottom: spacing.md },
+  companyJobRow: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border,
+    padding: spacing.sm, marginBottom: spacing.sm,
+  },
+  companyJobIconWrap: {
+    width: 34, height: 34, borderRadius: 17, backgroundColor: `${colors.primary}14`,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  companyJobTitle: { color: colors.text, fontWeight: '700', fontSize: 13 },
+  companyJobSub: { color: colors.textMuted, fontSize: 11, marginTop: 1, textTransform: 'capitalize' },
+  companyJobStatusPill: { borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 4 },
+  companyJobStatusText: { fontSize: 11, fontWeight: '700', textTransform: 'capitalize' },
+  companyEmptyState: {
+    alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg,
+    borderWidth: 1, borderColor: colors.border, borderStyle: 'dashed', padding: spacing.xl,
+  },
+  companyEmptyText: { color: colors.textMuted, marginTop: spacing.sm, fontWeight: '600' },
 });

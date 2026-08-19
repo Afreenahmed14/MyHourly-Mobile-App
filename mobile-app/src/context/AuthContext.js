@@ -1,5 +1,6 @@
 import { createContext, useCallback, useEffect, useState } from 'react';
 import { authApi } from '../api/authApi';
+import { notificationApi } from '../api/notificationApi';
 import { tokenStorage } from '../storage/tokenStorage';
 import { setAccessTokenCache, setOnAuthExpired } from '../api/client';
 
@@ -98,6 +99,12 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
+    try {
+      await notificationApi.clearPushToken();
+    } catch {
+      // Non-fatal — proceed with logout even if this device's token
+      // couldn't be cleared server-side.
+    }
     try {
       await authApi.logout();
     } finally {

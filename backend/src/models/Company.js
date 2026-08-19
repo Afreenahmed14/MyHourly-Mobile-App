@@ -37,6 +37,11 @@ const companySchema = new mongoose.Schema(
     bookmarkedCandidates: [
       { type: mongoose.Schema.Types.ObjectId, ref: 'Candidate' },
     ],
+    // Expo push token for this device, used to deliver real mobile OS
+    // notifications (not just the in-app notification list). Overwritten
+    // on each login/registration so it always reflects the most recent
+    // device; a real multi-device setup would use an array instead.
+    pushToken: { type: String, default: null },
   },
   { timestamps: true }
 );

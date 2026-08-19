@@ -1,20 +1,33 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState, useEffect, useRef  } from 'react';
 import { View, Text, TextInput, FlatList, TouchableOpacity, Modal, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { candidateApi } from '../../api/candidateApi';
 import { companyApi } from '../../api/companyApi';
+import { taxonomyApi } from '../../api/taxonomyApi';
 import { useAuth } from '../../context/useAuth';
 import CandidateCard from '../../components/CandidateCard';
 import EmptyState from '../../components/EmptyState';
 import LoadingView from '../../components/LoadingView';
 import { legacyColors as colors, legacyRadius as radius, legacySpacing as spacing } from '../../theme/legacyTheme';
 
-const DEVELOPER_TYPES = [
-  'Full Stack', 'Frontend', 'Backend', 'Mobile', 'DevOps', 'Data Engineer',
-  'QA / Test Automation', 'UI/UX Designer',
+// Fallback shown only until the real admin-managed list loads from
+// GET /taxonomy/developer-types (see backend/src/constants/developerTypes.js
+// for the seed list this mirrors) — the live list is fetched below since
+// admins can add/remove types without a code change.
+const FALLBACK_DEVELOPER_TYPES = [
+  'Frontend Developer', 'Backend Developer', 'Full Stack Developer',
+  'DevOps Engineer', 'Java Developer', 'Mobile Developer',
 ];
-const AVAILABILITY = ['Full time', 'Part time', 'Contract', 'Not available'];
+// Must match the Candidate.availability enum exactly
+// (backend/src/models/Candidate.js) — label is what's shown, value is
+// what's sent as the `availability` query param.
+const AVAILABILITY = [
+  { label: 'Full time', value: 'full-time' },
+  { label: 'Part time', value: 'part-time' },
+  { label: 'Contract', value: 'contract' },
+  { label: 'Not available', value: 'not-available' },
+];
 const SORT_OPTIONS = [
   { label: 'Name (A-Z)', value: 'name' },
   { label: 'Highest Rated', value: '-rating' },
@@ -89,7 +102,7 @@ export default function BrowseFreelancersScreen({ navigation }) {
   const [minExp, setMinExp] = useState('');
   const [maxExp, setMaxExp] = useState('');
   const [ratingFilter, setRatingFilter] = useState(null);
-  const [availabilityFilter, setAvailabilityFilter] = useState([]);
+  const [availabilityFilter, setAvailabilityFilter] = useState(null);
   const [city, setCity] = useState('');
   const [remoteOnly, setRemoteOnly] = useState(false);
 
@@ -97,10 +110,20 @@ export default function BrowseFreelancersScreen({ navigation }) {
   const [sortSheetVisible, setSortSheetVisible] = useState(false);
   const [filtersSheetVisible, setFiltersSheetVisible] = useState(false);
   const [searchVisible, setSearchVisible] = useState(false);
+  const [developerTypes, setDeveloperTypes] = useState(FALLBACK_DEVELOPER_TYPES);
+
+  useEffect(() => {
+    taxonomyApi.getDeveloperTypes()
+      .then((res) => {
+        const list = res.data.data?.developerTypes || [];
+        if (list.length) setDeveloperTypes(list.map((t) => t.name));
+      })
+      .catch(() => {}); // keep fallback list on failure
+  }, []);
 
   const filtersActive =
     !!minRate || !!maxRate || !!minExp || !!maxExp || !!ratingFilter ||
-    availabilityFilter.length > 0 || !!city.trim() || remoteOnly;
+    !!availabilityFilter || !!city.trim() || remoteOnly;
 
   const buildParams = useCallback((pageNum) => {
     const params = { page: pageNum, limit: PAGE_SIZE, sort: sort.value };
@@ -111,7 +134,7 @@ export default function BrowseFreelancersScreen({ navigation }) {
     if (minExp) params.minExperience = minExp;
     if (maxExp) params.maxExperience = maxExp;
     if (ratingFilter) params.minRating = ratingFilter;
-    if (availabilityFilter.length > 0) params.availability = availabilityFilter.join(',');
+    if (availabilityFilter) params.availability = availabilityFilter;
     if (city.trim()) params.city = city.trim();
     if (remoteOnly) params.remote = true;
     return params;
@@ -162,13 +185,13 @@ export default function BrowseFreelancersScreen({ navigation }) {
     );
   };
 
-  const toggleAvailability = (opt) => {
-    setAvailabilityFilter((prev) => (prev.includes(opt) ? prev.filter((o) => o !== opt) : [...prev, opt]));
+  const toggleAvailability = (value) => {
+    setAvailabilityFilter((prev) => (prev === value ? null : value));
   };
 
   const clearFilters = () => {
     setMinRate(''); setMaxRate(''); setMinExp(''); setMaxExp('');
-    setRatingFilter(null); setAvailabilityFilter([]); setCity(''); setRemoteOnly(false);
+    setRatingFilter(null); setAvailabilityFilter(null); setCity(''); setRemoteOnly(false);
   };
 
   if (loading && page === 1 && candidates.length === 0) {
@@ -262,16 +285,17 @@ export default function BrowseFreelancersScreen({ navigation }) {
             {!loading && <Text style={styles.resultsCount}>{total} engineers found</Text>}
           </>
         }
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <CandidateCard
             candidate={item}
+            index={index}
             onPress={() => handleViewProfile(item)}
             onBookmarkToggle={role === 'company' ? () => toggleBookmark(item) : undefined}
           />
         )}
         ListEmptyComponent={
           loading ? (
-            <LoadingView />
+            <LoadingView animated={false} />
           ) : (
             <View style={styles.emptyState}>
               <Ionicons name="search" size={28} color={colors.textMuted} />
@@ -305,7 +329,7 @@ export default function BrowseFreelancersScreen({ navigation }) {
       <OptionSheet
         visible={typeSheetVisible}
         title="Developer Type"
-        options={['All Types', ...DEVELOPER_TYPES]}
+        options={['All Types', ...developerTypes]}
         selected={developerType}
         onSelect={(val) => { setDeveloperType(val); runSearch(); }}
         onClose={() => setTypeSheetVisible(false)}
@@ -402,14 +426,14 @@ export default function BrowseFreelancersScreen({ navigation }) {
             <Text style={styles.filterGroupLabel}>AVAILABILITY</Text>
             <View style={styles.chipsWrap}>
               {AVAILABILITY.map((opt) => {
-                const active = availabilityFilter.includes(opt);
+                const active = availabilityFilter === opt.value;
                 return (
                   <TouchableOpacity
-                    key={opt}
+                    key={opt.value}
                     style={[styles.optChip, active && styles.optChipActive]}
-                    onPress={() => toggleAvailability(opt)}
+                    onPress={() => toggleAvailability(opt.value)}
                   >
-                    <Text style={[styles.optChipText, active && styles.optChipTextActive]}>{opt}</Text>
+                    <Text style={[styles.optChipText, active && styles.optChipTextActive]}>{opt.label}</Text>
                   </TouchableOpacity>
                 );
               })}

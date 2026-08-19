@@ -1,9 +1,25 @@
 import { useCallback, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { companyApi } from '../../api/companyApi';
+import { chatApi } from '../../api/chatApi';
 import LoadingView from '../../components/LoadingView';
+import { resolveImageUrl } from '../../constants/config';
 import { legacyColors as colors, legacyRadius as radius, legacySpacing as spacing } from '../../theme/legacyTheme';
+
+function HireAvatar({ candidate }) {
+  const [failed, setFailed] = useState(false);
+  const uri = resolveImageUrl(candidate.profileImage);
+  if (uri && !failed) {
+    return <Image source={{ uri }} style={styles.avatarImage} onError={() => setFailed(true)} />;
+  }
+  return (
+    <View style={styles.avatar}>
+      <Text style={styles.avatarText}>{(candidate.name || '?').charAt(0)}</Text>
+    </View>
+  );
+}
 
 /**
  * Hired Candidates — company-only. Visual design ported from the
@@ -14,6 +30,7 @@ import { legacyColors as colors, legacyRadius as radius, legacySpacing as spacin
 export default function HiredCandidatesScreen({ navigation }) {
   const [hires, setHires] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [messaging, setMessaging] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -27,6 +44,20 @@ export default function HiredCandidatesScreen({ navigation }) {
   }, []);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  const handleMessage = async (candidate) => {
+    setMessaging(candidate._id);
+    try {
+      const res = await chatApi.openConversation(candidate._id, 'Candidate');
+      const conversation = res.data.data.conversation;
+      navigation.navigate('ChatTab', {
+        screen: 'ChatThread',
+        params: { conversationId: conversation._id, otherName: candidate.name, otherAvatar: candidate.profileImage },
+      });
+    } finally {
+      setMessaging(null);
+    }
+  };
 
   if (loading) return <LoadingView />;
 
@@ -49,13 +80,7 @@ export default function HiredCandidatesScreen({ navigation }) {
               onPress={() => navigation.navigate('CandidateDetails', { candidateId: candidate._id })}
             >
               <View style={styles.jobCardHeader}>
-                {candidate.profileImage ? (
-                  <Image source={{ uri: candidate.profileImage }} style={styles.avatarImage} />
-                ) : (
-                  <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>{(candidate.name || '?').charAt(0)}</Text>
-                  </View>
-                )}
+                <HireAvatar candidate={candidate} />
                 <View style={styles.jobCardTitleWrap}>
                   <Text style={styles.rowTitle} numberOfLines={1}>{candidate.name}</Text>
                   {!!candidate.headline && (
@@ -65,6 +90,13 @@ export default function HiredCandidatesScreen({ navigation }) {
                     <Text style={styles.hiredDate}>Hired on {new Date(item.hiredAt).toLocaleDateString()}</Text>
                   )}
                 </View>
+                <TouchableOpacity
+                  style={styles.messageBtn}
+                  disabled={messaging === candidate._id}
+                  onPress={(e) => { e.stopPropagation(); handleMessage(candidate); }}
+                >
+                  <MaterialCommunityIcons name="chat-outline" size={20} color={colors.primary} />
+                </TouchableOpacity>
               </View>
             </TouchableOpacity>
           );
@@ -103,6 +135,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   jobCardHeader: { flexDirection: 'row', alignItems: 'center' },
+  messageBtn: {
+    width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border,
+  },
   avatar: {
     width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary,
     alignItems: 'center', justifyContent: 'center', marginRight: spacing.sm,

@@ -1,6 +1,10 @@
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { View, Text, Image, StyleSheet } from 'react-native';
+import Animated, { FadeInUp, Easing } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
-import { legacyColors as colors, legacyRadius as radius, legacySpacing as spacing } from '../theme/legacyTheme';
+import { resolveImageUrl } from '../constants/config';
+import AnimatedPressable from './AnimatedPressable';
+import { legacyColors as colors, legacyRadius as radius, legacySpacing as spacing, legacyShadows as shadows } from '../theme/legacyTheme';
 
 const formatSalary = (job) => {
   if (!job.salaryMin && !job.salaryMax) return null;
@@ -27,19 +31,21 @@ const initials = (name) =>
  * component and its CSS (logo badge, title/company, meta icon row,
  * salary, Applied badge, primary-skill chip), wired to real job fields.
  */
-export default function JobCard({ job, onPress }) {
+export default function JobCard({ job, onPress, index = 0 }) {
+  const [logoFailed, setLogoFailed] = useState(false);
   const salary = formatSalary(job);
   const posted = timeAgo(job.createdAt);
   const companyName = job.companyId?.companyName || 'Company';
-  const companyLogo = job.companyId?.logo;
+  const companyLogo = resolveImageUrl(job.companyId?.logo);
   const primarySkill = (job.skills && job.skills[0]) || job.primarySkill;
   const locationText = job.location?.remote ? 'Remote' : job.location?.city;
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
+    <Animated.View entering={FadeInUp.delay(Math.min(index, 8) * 60).duration(280).easing(Easing.out(Easing.cubic))}>
+    <AnimatedPressable style={styles.card} onPress={onPress}>
       <View style={styles.topRow}>
-        {companyLogo ? (
-          <Image source={{ uri: companyLogo }} style={styles.logoImage} />
+        {companyLogo && !logoFailed ? (
+          <Image source={{ uri: companyLogo }} style={styles.logoImage} onError={() => setLogoFailed(true)} />
         ) : (
           <View style={styles.logoBadge}>
             <Text style={styles.logoBadgeText}>{initials(companyName)}</Text>
@@ -84,7 +90,8 @@ export default function JobCard({ job, onPress }) {
           <Text style={styles.skillChipText}>{primarySkill}</Text>
         </View>
       )}
-    </TouchableOpacity>
+    </AnimatedPressable>
+    </Animated.View>
   );
 }
 
@@ -96,6 +103,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.md,
     marginBottom: spacing.md,
+    ...shadows.card,
   },
   topRow: { flexDirection: 'row', alignItems: 'flex-start' },
   logoBadge: {

@@ -2,7 +2,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const Candidate = require('../models/Candidate');
-const Notification = require('../models/Notification');
+const { notify } = require('../utils/notify');
 const ProfileView = require('../models/ProfileView');
 const ContactUnlock = require('../models/ContactUnlock');
 const { replaceFile } = require('../helpers/uploadHelper');
@@ -45,7 +45,7 @@ const notifyProfileViewed = async ({ candidateId, viewerId, viewerModel, viewerL
     await ProfileView.create({ candidateId, viewerId, viewerModel, lastViewedAt: now, lastNotifiedAt: now });
   }
 
-  await Notification.create({
+  await notify({
     userId: candidateId,
     userModel: 'Candidate',
     title: 'Your profile was viewed',
@@ -92,6 +92,7 @@ const updateMyProfile = asyncHandler(async (req, res) => {
     'name', 'headline', 'about', 'experience', 'experienceMonths', 'primarySkills', 'secondarySkills',
     'developerType', 'hourlyRate', 'availability', 'languages', 'portfolioLinks', 'github',
     'linkedin', 'education', 'projects', 'visibility', 'location', 'profileImage',
+    'avatarImage', 'avatarChoices',
   ];
 
   allowedFields.forEach((field) => {

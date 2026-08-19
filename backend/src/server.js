@@ -30,6 +30,7 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const statsRoutes = require('./routes/statsRoutes');
 const taxonomyRoutes = require('./routes/taxonomyRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 const app = express();
 
@@ -106,6 +107,7 @@ app.use('/api/v1/reviews', reviewRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/stats', statsRoutes);
 app.use('/api/v1/taxonomy', taxonomyRoutes);
+app.use('/api/v1/chat', chatRoutes);
 
 // ---- Error Handling ----
 app.use(notFound);

@@ -43,6 +43,14 @@ const projectSchema = new mongoose.Schema(
 const candidateSchema = new mongoose.Schema(
   {
     profileImage: { type: String, default: '' },
+    // Optional Bitmoji-style illustrated avatar, built client-side via
+    // DiceBear (see mobile-app AvatarBuilderScreen) and shown on the
+    // candidate home page — kept separate from the real profileImage
+    // used everywhere else (cards, profile, etc). avatarChoices stores
+    // the per-feature selections (skin tone, hair, etc.) so the builder
+    // can be re-opened pre-filled with the candidate's last picks.
+    avatarImage: { type: String, default: '' },
+    avatarChoices: { type: mongoose.Schema.Types.Mixed, default: null },
     resume: { type: String, default: '' },
     headline: { type: String, trim: true, maxlength: 150 },
     about: { type: String, trim: true, maxlength: 2000 },
@@ -105,6 +113,11 @@ const candidateSchema = new mongoose.Schema(
       country: { type: String, trim: true },
       remote: { type: Boolean, default: true },
     },
+    // Expo push token for this device, used to deliver real mobile OS
+    // notifications (not just the in-app notification list). Overwritten
+    // on each login/registration so it always reflects the most recent
+    // device; a real multi-device setup would use an array instead.
+    pushToken: { type: String, default: null },
   },
   { timestamps: true }
 );

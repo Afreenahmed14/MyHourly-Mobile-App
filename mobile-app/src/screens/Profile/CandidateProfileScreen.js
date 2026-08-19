@@ -10,6 +10,7 @@ import { useAuth } from '../../context/useAuth';
 import { useSubscription } from '../../context/useSubscription';
 import { colors, spacing, radius } from '../../theme/theme';
 import ProfileCompletionRing from '../../components/ProfileCompletionRing';
+import SafeAvatar from '../../components/SafeAvatar';
 import { getProfileCompletion } from '../../utils/profileCompletion';
 
 /**
@@ -104,6 +105,14 @@ export default function CandidateProfileScreen({ navigation }) {
             percent={getProfileCompletion(candidate)}
             fallbackSource={require('../../../assets/icon.png')}
           />
+          <View style={styles.avatarSlot}>
+            <SafeAvatar
+              uri={candidate?.avatarImage}
+              label={candidate?.name || user?.name}
+              size={40}
+              style={styles.avatarSlotImage}
+            />
+          </View>
           <IconButton
             icon="pencil-outline"
             size={16}
@@ -112,7 +121,7 @@ export default function CandidateProfileScreen({ navigation }) {
             iconColor="#fff"
             style={styles.editBtn}
             disabled={!candidate}
-            onPress={() => navigation.navigate('HomeTab', { screen: 'EditCandidateProfile', params: { candidate } })}
+            onPress={() => navigation.navigate('EditCandidateProfile', { candidate })}
           />
         </View>
       </View>
@@ -211,6 +220,18 @@ const styles = StyleSheet.create({
   name: { color: colors.text, fontWeight: '700' },
   ringWrap: { position: 'relative' },
   editBtn: { position: 'absolute', bottom: -4, right: -4, margin: 0 },
+  avatarSlot: {
+    position: 'absolute',
+    top: -8,
+    left: -8,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: colors.surface,
+    backgroundColor: colors.surface,
+    zIndex: 10,
+    elevation: 10,
+  },
+  avatarSlotImage: { backgroundColor: colors.background },
   planCard: { marginBottom: spacing.lg, backgroundColor: colors.primary, borderRadius: radius.md },
   planLabel: { color: '#E0E7FF' },
   planName: { color: '#fff', fontWeight: '700' },
