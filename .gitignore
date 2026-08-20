@@ -7,10 +7,7 @@ dist/
 web-build/
 expo-env.d.ts
 
-# Environment files
-.env
-.env.*
-!.env.example
+
 
 # Native
 .kotlin/
