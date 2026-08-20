@@ -3,7 +3,7 @@ require("dotenv").config();
 export default {
   expo: {
     name: "HourlyRecruit",
-    slug: "hourlyrecruit-mobile",
+    slug: "hourly-recurit",
     version: "1.0.0",
     orientation: "portrait",
 
@@ -66,7 +66,11 @@ export default {
       googleIosClientId:
         process.env.GOOGLE_IOS_CLIENT_ID,
       googleWebClientId:
-        process.env.GOOGLE_WEB_CLIENT_ID
+        process.env.GOOGLE_WEB_CLIENT_ID,
+
+      eas: {
+        projectId: "114562f6-c369-4e8e-a194-8b067ac44219"
+      }
     }
   }
 };
