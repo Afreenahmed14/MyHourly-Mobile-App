@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
   companySectionTitle: { color: colors.text, fontWeight: '700', fontSize: 15, marginBottom: spacing.md },
   companyActionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.xl },
   companyActionTile: {
-    width: '47%', backgroundColor: colors.surface, borderRadius: radius.lg,
+    backgroundColor: colors.surface, borderRadius: radius.lg,
     borderWidth: 1, borderColor: colors.border, padding: spacing.md,
   },
   companyActionIconWrap: {
