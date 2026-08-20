@@ -22,9 +22,7 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
-# Build files
-*.apk
-*.aab
+
 
 # Metro
 .metro-health-check*
